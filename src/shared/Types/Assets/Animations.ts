@@ -1,0 +1,63 @@
+export type IAnimations = {
+    ["Default"]: {
+        ["Dash_Back_Left"]: Animation;
+        ["Dash_Back_Right"]: Animation;
+        ["Dash_Cancel"]: Animation;
+        ["Dash_Forward_Left"]: Animation;
+        ["Dash_Forward_Right"]: Animation;
+        ["Dash_Left"]: Animation;
+        ["Dash_Right"]: Animation;
+        ["Falling"]: Animation;
+        ["Hit_1"]: Animation;
+        ["Hit_2"]: Animation;
+        ["Hit_3"]: Animation;
+        ["Hit_4"]: Animation;
+        ["Idle"]: Animation;
+        ["Jump"]: Animation;
+        ["PostureBreak"]: Animation;
+        ["Run"]: Animation;
+        ["Walk"]: Animation;
+    } & Folder;
+    ["Katana"]: {
+        ["Block"]: Animation;
+        ["Falling"]: Animation;
+        ["Idle"]: Animation;
+        ["Jump"]: Animation;
+        ["M1_1"]: Animation;
+        ["M1_2"]: Animation;
+        ["M1_3"]: Animation;
+        ["M1_4"]: Animation;
+        ["Parry_1"]: Animation;
+        ["Parry_2"]: Animation;
+        ["Run"]: Animation;
+        ["Walk"]: Animation;
+    } & Folder;
+    ["Sekiro_Equipped"]: {
+        ["Block"]: Animation;
+        ["Falling"]: Animation;
+        ["Idle"]: Animation;
+        ["Jump"]: Animation;
+        ["M1_1"]: Animation;
+        ["M1_2"]: Animation;
+        ["M1_3"]: Animation;
+        ["M1_4"]: Animation;
+        ["Parry_1"]: Animation;
+        ["Parry_2"]: Animation;
+        ["Run"]: Animation;
+        ["Walk"]: Animation;
+    } & Folder;
+    ["Sekiro_Unequipped"]: {
+        ["Block"]: Animation;
+        ["Falling"]: Animation;
+        ["Idle"]: Animation;
+        ["Jump"]: Animation;
+        ["M1_1"]: Animation;
+        ["M1_2"]: Animation;
+        ["M1_3"]: Animation;
+        ["M1_4"]: Animation;
+        ["Parry_1"]: Animation;
+        ["Parry_2"]: Animation;
+        ["Run"]: Animation;
+        ["Walk"]: Animation;
+    } & Folder;
+} & Folder;

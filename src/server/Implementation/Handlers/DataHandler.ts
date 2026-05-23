@@ -1,0 +1,93 @@
+import { Dependency, Service } from "@flamework/core";
+
+import { SharedRegistry } from "shared/DI/Generated/SharedRegistry";
+import { ServerRegistry } from "server/DI/Generated/ServerRegistry";
+
+import { CompositionRootShared } from "shared/DI/CompositionRootShared";
+import { CompositionRootServer } from "server/DI/CompositionRootServer";
+
+import { ServerAtomReplication } from "server/Application/ServerAtomReplication";
+
+import type { PlayerData } from "shared/Types/Gameplay/PlayerData";
+import EventBusAggregate from "shared/Domain/EventBus/Aggregates/EventBusAggregate";
+
+const sharedScope = CompositionRootShared.createScope();
+const serverScope = CompositionRootServer.createScope();
+
+export class DataHandler {
+    private readonly playerStringId: string;
+
+    private readonly dataStoreAPI = serverScope.resolve(ServerRegistry.Singletons.API.DataStoreAPI);
+    private readonly eventBusAPI = sharedScope.resolve(SharedRegistry.Singletons.API.EventBusAPI);
+
+    public atomReplication = Dependency<ServerAtomReplication>();
+
+    private readonly playerDataBus: EventBusAggregate;
+
+    private profile?: unknown;
+    private data?: PlayerData;
+
+    public constructor(private readonly player: Player) {
+        this.playerStringId = tostring(player.UserId);
+        this.playerDataBus = this.eventBusAPI.New(this.playerStringId, "PlayerData");
+    }
+
+    public Load(): boolean {
+        const profile = this.dataStoreAPI.LoadProfile("PlayersData", this.playerStringId, {
+            onSessionEnd: () => {
+                this.player.Kick("Your data session ended. Please rejoin!");
+            },
+        });
+
+        if (!profile) {
+            this.player.Kick("Failed to load data. Please rejoin!");
+            return false;
+        }
+
+        this.profile = profile;
+        this.data = profile.GetData() as PlayerData;
+
+        this.GetAtom().SetRoot(this.data);
+
+        this.atomReplication.MarkDataLoaded(this.player);
+
+        this.playerDataBus.FireSync("DataLoaded", undefined, true, true);
+
+        return true;
+    }
+
+    public GetPlayer(): Player {
+        return this.player;
+    }
+
+    public GetPlayerId(): string {
+        return this.playerStringId;
+    }
+
+    public GetProfile() {
+        if (!this.profile) {
+            error(`Profile for player ${this.playerStringId} is not loaded.`);
+        }
+
+        return this.profile;
+    }
+
+    public GetData(): PlayerData {
+        if (!this.data) {
+            error(`Data for player ${this.playerStringId} is not loaded.`);
+        }
+
+        return this.data;
+    }
+
+    public GetAtom() {
+        return this.atomReplication.GetPlayersDataAtom().For(this.playerStringId);
+    }
+
+    public Release(): void {
+        this.atomReplication.UnregisterPlayer(this.player);
+        this.dataStoreAPI.ReleaseProfile("PlayersData", this.playerStringId);
+    }
+
+    public AddValue(path: string, amount: number): void {}
+}
