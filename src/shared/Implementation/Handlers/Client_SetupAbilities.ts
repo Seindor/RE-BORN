@@ -33,26 +33,37 @@ export class Client_SetupAbilities implements OnStart {
                 const atomReplication = Dependency<ClientAtomReplication>();
                 const playerData = atomReplication.GetLocalPlayerData()!;
 
-                for (const pack of this.currentPacks) {
-                    const keys = [] as string[];
+                let humanoid = character.WaitForChild("Humanoid") as Humanoid;
 
-                    for (const [key] of pairs(pack)) {
-                        keys.push(key);
-                    }
+                const removeExistingAbilities = () => {
+                    for (const pack of this.currentPacks) {
+                        const keys = [] as string[];
 
-                    for (const key of keys) {
-                        const ability = pack[key];
+                        for (const [key] of pairs(pack)) {
+                            keys.push(key);
+                        }
 
-                        if (ability?.ability) {
-                            this.api.abilityAPI.Remove(
-                                this.playerStringUserId,
-                                ability.ability.config.name,
-                            );
+                        for (const key of keys) {
+                            const ability = pack[key];
 
-                            delete pack[key];
+                            if (ability?.ability) {
+                                this.api.abilityAPI.Remove(
+                                    this.playerStringUserId,
+                                    ability.ability.config.name,
+                                );
+
+                                ability.ability = undefined;
+                                delete pack[key];
+                            }
                         }
                     }
-                }
+
+                    this.currentPacks.clear();
+                };
+
+                humanoid.Died.Once(() => removeExistingAbilities());
+
+                removeExistingAbilities();
 
                 this.currentPacks.push(CreatePack("Default", this.playerStringUserId));
                 this.currentPacks.push(

@@ -15,12 +15,19 @@ export class TraceService {
         return clip;
     }
 
-    log(actorId: string, event: TraceEvent, message: string, extra?: Partial<TraceEntryLite>) {
+    log(
+        actorId: string,
+        event: TraceEvent,
+        message: string,
+        extra?: Partial<TraceEntryLite>,
+        miscData?: Record<string, unknown>,
+    ) {
         const clip = this.ensure(actorId);
         clip.push({
             time: os.clock(),
             event,
             message,
+            miscData,
             ...extra,
         });
     }

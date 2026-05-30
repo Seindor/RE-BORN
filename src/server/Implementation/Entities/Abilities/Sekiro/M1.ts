@@ -25,100 +25,7 @@ const eventBusAPI = sharedScope.resolve(SharedRegistry.Singletons.API.EventBusAP
 const phaseResolverAPI = sharedScope.resolve(SharedRegistry.Singletons.API.PhaseResolverAPI);
 const solverAPI = sharedScope.resolve(SharedRegistry.Singletons.API.SolverAPI);
 
-const timings = {
-    Equipped: {
-        M1_1: {
-            duration: 0.5,
-            cooldown: 0.583,
-            events: {
-                ["mark"]: 0.25,
-                ["swingreg"]: 0.333,
-                ["swingend"]: 0.5,
-                ["hitreg"]: 0.416,
-                ["hitend"]: 0.5,
-            },
-        },
-        M1_2: {
-            duration: 0.5,
-            cooldown: 0.583,
-            events: {
-                ["mark"]: 0.216,
-                ["swingreg"]: 0.316,
-                ["swingend"]: 0.5,
-                ["hitreg"]: 0.383,
-                ["hitend"]: 0.45,
-            },
-        },
-        M1_3: {
-            duration: 0.5,
-            cooldown: 0.583,
-            events: {
-                ["mark"]: 0.216,
-                ["swingreg"]: 0.316,
-                ["swingend"]: 0.5,
-                ["hitreg"]: 0.416,
-                ["hitend"]: 0.466,
-            },
-        },
-        M1_4: {
-            duration: 0.5,
-            cooldown: 1.5,
-            events: {
-                ["mark"]: 0.25,
-                ["swingreg"]: 0.316,
-                ["swingend"]: 0.5,
-                ["hitreg"]: 0.4,
-                ["hitend"]: 0.45,
-            },
-        },
-    },
-    Unequipped: {
-        M1_1: {
-            duration: 0.5,
-            cooldown: 0.583,
-            events: {
-                ["mark"]: 0.33,
-                ["swingreg"]: 0.35,
-                ["swingend"]: 0.5,
-                ["hitreg"]: 0.35,
-                ["hitend"]: 0.416,
-            },
-        },
-        M1_2: {
-            duration: 0.5,
-            cooldown: 0.583,
-            events: {
-                ["mark"]: 0.216,
-                ["swingreg"]: 0.316,
-                ["swingend"]: 0.5,
-                ["hitreg"]: 0.383,
-                ["hitend"]: 0.45,
-            },
-        },
-        M1_3: {
-            duration: 0.5,
-            cooldown: 0.583,
-            events: {
-                ["mark"]: 0.216,
-                ["swingreg"]: 0.316,
-                ["swingend"]: 0.5,
-                ["hitreg"]: 0.416,
-                ["hitend"]: 0.466,
-            },
-        },
-        M1_4: {
-            duration: 0.5,
-            cooldown: 1.5,
-            events: {
-                ["mark"]: 0.25,
-                ["swingreg"]: 0.316,
-                ["swingend"]: 0.5,
-                ["hitreg"]: 0.4,
-                ["hitend"]: 0.45,
-            },
-        },
-    },
-};
+import { Sekiro_Basic_M1_Timings as timings } from "shared/Implementation/Entities/VFXs/Sekiro/Types/Basic_M1_Timings";
 
 export function M1(ownerId: string) {
     let statusEffectsReplication = Dependency<StatusEffectsReplication>();
@@ -209,37 +116,34 @@ export function M1(ownerId: string) {
 
                 entity.miscData.set("LastLaunchedVFX", [
                     "Sekiro",
-                    "M1",
+                    "Basic_M1",
                     ownerId,
                     character,
                     currentClick,
                     Workspace.GetServerTimeNow(),
                     ownerPing,
-                    timings,
                 ]);
 
                 if (Players.GetPlayerFromCharacter(character)) {
                     ServerSignals.LaunchVFX.except(
                         Players.GetPlayerFromCharacter(character)!,
                         "Sekiro",
-                        "M1",
+                        "Basic_M1",
                         ownerId,
                         character,
                         currentClick,
                         Workspace.GetServerTimeNow(),
                         ownerPing,
-                        timings,
                     );
                 } else {
                     ServerSignals.LaunchVFX.broadcast(
                         "Sekiro",
-                        "M1",
+                        "Basic_M1",
                         ownerId,
                         character,
                         currentClick,
                         Workspace.GetServerTimeNow(),
                         ownerPing,
-                        timings,
                     );
                 }
 
@@ -364,7 +268,6 @@ export function M1(ownerId: string) {
                 ]);
 
                 if (Players.GetPlayerFromCharacter(character)) {
-                    print("SERVER_M1_INTERRUPT_", ownerId);
                     ServerSignals.Ability.fire(
                         Players.GetPlayerFromCharacter(character)!,
                         "Sekiro_M1",
@@ -376,7 +279,7 @@ export function M1(ownerId: string) {
                 } else {
                     ServerSignals.LaunchVFX.broadcast(
                         "Sekiro",
-                        "Destroy_M1",
+                        "Destroy_Basic_M1",
                         ownerId,
                         character,
                         currentClick,

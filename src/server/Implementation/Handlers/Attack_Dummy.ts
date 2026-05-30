@@ -26,7 +26,7 @@ export class Attack_Dummy {
         task.spawn(() => {
             while (true) {
                 abilityAPI.Execute(M1.ability!, "Start", true);
-                task.wait(M1.ability?.config.cooldown);
+                task.wait(M1.ability!.config.cooldown / 3 ?? 0.5);
             }
         });
     }

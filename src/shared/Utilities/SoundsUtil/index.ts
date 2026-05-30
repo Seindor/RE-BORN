@@ -46,6 +46,7 @@ class ClassSoundUtils {
 
         if (playOnce) {
             sound.Ended.Once(() => {
+                task.wait(0.5);
                 sound.Destroy();
             });
         }

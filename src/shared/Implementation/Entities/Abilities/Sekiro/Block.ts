@@ -109,15 +109,13 @@ export function Block(ownerId: string) {
                     true,
                 );
 
-                ability._janitor.Remove("BlockCheck");
-
                 ability._janitor.Add(
-                    task.delay(0.1, () => {
+                    RunService.Heartbeat.Connect(() => {
                         if (!ability.config.states.includes("Holding")) {
                             ability.Execute("End", true);
                         }
                     }),
-                    true,
+                    "Disconnect",
                     "BlockCheck",
                 );
             },
@@ -147,19 +145,25 @@ export function Block(ownerId: string) {
 
                 let sekiroVFXs = VFXModules.Sekiro();
 
+                ability._janitor.Remove("BlockCheck");
+
                 ClientSignals.Ability.fire("Sekiro_Block", "Hold", "End");
 
                 replicatedStatusEffectsAPI.RemoveStatus(ownerId, "Block");
                 sekiroVFXs.BlockStop(ownerId, character, Workspace.GetServerTimeNow());
                 print("Shared_Block_End");
             },
-            onInterrupt() {},
+            onInterrupt() {
+                ability._janitor.Remove("BlockCheck");
+            },
             onReject(serverReject?: boolean) {
                 if (serverReject) {
                     let entity = entitiesStorageAPI.GetEntity(ownerId)!;
                     let character = entity.entity as Model;
 
                     let sekiroVFXs = VFXModules.Sekiro();
+
+                    ability._janitor.Remove("BlockCheck");
 
                     ClientSignals.Ability.fire("Sekiro_Block", "Hold", "Reject");
 

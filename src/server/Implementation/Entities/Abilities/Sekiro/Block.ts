@@ -1,4 +1,4 @@
-import { Players, Workspace } from "@rbxts/services";
+import { Players, Workspace, RunService } from "@rbxts/services";
 
 import { Dependency } from "@flamework/core";
 import { ServerSignals } from "shared/Implementation/Entities/SerrverSignals";
@@ -83,6 +83,16 @@ export function Block(ownerId: string) {
                     Workspace.GetServerTimeNow(),
                 ]);
 
+                ability._janitor.Add(
+                    RunService.Heartbeat.Connect(() => {
+                        if (!ability.config.states.includes("Holding")) {
+                            ability.Execute("End", true);
+                        }
+                    }),
+                    "Disconnect",
+                    "BlockCheck",
+                );
+
                 if (entity.HasTag("Player")) {
                     ServerSignals.LaunchVFX.except(
                         Players.GetPlayerFromCharacter(character)!,
@@ -108,6 +118,7 @@ export function Block(ownerId: string) {
                 let entity = entitiesStorageAPI.GetEntity(ownerId)!;
                 let character = entity.entity as Model;
 
+                ability._janitor.Remove("BlockCheck");
                 statusEffectsAPI.RemoveStatus(ownerId, "Block");
 
                 entity.miscData.set("LastLaunchedVFX", [
@@ -139,11 +150,14 @@ export function Block(ownerId: string) {
 
                 print("Server_Block_End");
             },
-            onInterrupt() {},
+            onInterrupt() {
+                ability._janitor.Remove("BlockCheck");
+            },
             onReject() {
                 let entity = entitiesStorageAPI.GetEntity(ownerId)!;
                 let character = entity.entity as Model;
 
+                ability._janitor.Remove("BlockCheck");
                 statusEffectsAPI.RemoveStatus(ownerId, "Block");
 
                 entity.miscData.set("LastLaunchedVFX", [

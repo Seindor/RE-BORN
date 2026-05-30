@@ -19,6 +19,7 @@ export class AbilityAggregate implements IAbility {
 
     public _janitor = new Janitor<any>();
 
+    private destroyed = false as boolean;
     private ending = false;
 
     constructor(_config: IAbilityConfig, _behaviours: IAbilityBehaviour) {
@@ -27,6 +28,7 @@ export class AbilityAggregate implements IAbility {
     }
 
     private validateDuration(check: boolean) {
+        if (this.destroyed) return;
         this._janitor.Remove("validateDuration");
 
         if (this.config.manualEnd) return;
@@ -50,6 +52,7 @@ export class AbilityAggregate implements IAbility {
     }
 
     private validateCooldown() {
+        if (this.destroyed) return;
         this._janitor.Remove("validateCooldown");
 
         const connection = RunService.Heartbeat.Connect(() => {
@@ -64,6 +67,7 @@ export class AbilityAggregate implements IAbility {
     }
 
     private canStart(check: boolean): boolean {
+        if (this.destroyed) return false;
         if (!check) return true;
         if (this.HasState("Locked")) return false;
         if (this.HasState("Active")) return false;
@@ -78,10 +82,12 @@ export class AbilityAggregate implements IAbility {
     }
 
     public AddState(state: IAbilityStates) {
+        if (!this) return;
         ArrayHelper.addString(this.config.states, state, true);
     }
 
     public RemoveState(state: IAbilityStates) {
+        if (!this || !this.config || !this.config.states) return;
         ArrayHelper.removeString(this.config.states, state, true);
     }
 
@@ -95,6 +101,7 @@ export class AbilityAggregate implements IAbility {
     }
 
     public RemoveTag(tag: string) {
+        if (!this) return;
         if (!this.config.tags) return;
         const index = this.config.tags.indexOf(tag);
         if (index !== -1) this.config.tags.remove(index);
@@ -105,16 +112,20 @@ export class AbilityAggregate implements IAbility {
     }
 
     public GetTags(): string[] {
+        if (this.destroyed) return [];
         return this.config.tags ?? [];
     }
 
     public GetBlacklist(): IStatusId[] {
+        if (this.destroyed) return [];
         const global = IAbilityBlacklist;
         const additional = this.config.additionalBlacklist ?? [];
         return [...global, ...additional];
     }
 
     public Execute(callBackName: "Start" | "End", check: boolean, ...args: unknown[]) {
+        if (this.destroyed) return;
+
         if (callBackName === "Start") {
             if (!this.canStart(check)) {
                 this.behaviours.onReject?.(...args);
@@ -160,6 +171,7 @@ export class AbilityAggregate implements IAbility {
     }
 
     public Interrupt(...args: unknown[]) {
+        if (this.destroyed) return;
         // if (!this.HasState("Active")) {
         //     print("RETURNRR");
         //     return;
@@ -172,6 +184,7 @@ export class AbilityAggregate implements IAbility {
     }
 
     public Reject(...args: unknown[]) {
+        if (this.destroyed) return;
         this.behaviours.onReject?.(...args);
     }
 
@@ -185,6 +198,7 @@ export class AbilityAggregate implements IAbility {
     }
 
     public Destroy() {
+        this.destroyed = true;
         this._janitor.Cleanup();
         TableHelper.ClearTable(this);
     }

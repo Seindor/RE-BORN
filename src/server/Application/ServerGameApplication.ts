@@ -17,6 +17,6 @@ export class ServerGameApplication implements OnStart {
 
         new Blocking_Dummy(NPCs.WaitForChild("Blocking_Dummy")! as Model);
         new Dummy(NPCs.WaitForChild("Dummy")! as Model);
-        // new Attack_Dummy(NPCs.WaitForChild("Attack_Dummy")! as Model);
+        //new Attack_Dummy(NPCs.WaitForChild("Attack_Dummy")! as Model);
     }
 }

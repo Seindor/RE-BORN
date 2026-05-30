@@ -9,4 +9,5 @@ export interface TraceEntryLite {
     stepId?: string;
     sourceId?: string;
     targetId?: string;
+    miscData?: Record<string, unknown>;
 }

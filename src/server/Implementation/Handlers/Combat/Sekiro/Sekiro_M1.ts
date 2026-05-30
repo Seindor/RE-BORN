@@ -57,7 +57,35 @@ export const Sekiro_M1_Combat = (ownerId: string) => {
             {
                 name: "Block",
                 priority: 2,
-                onCheck: (ctx) => statusEffectsAPI.HasStatus(ctx.targetId, "Block"),
+                onCheck: (ctx) => {
+                    let owner_entity = entitiesStorageAPI.GetEntity(ctx.ownerId)!;
+                    let target_entity = entitiesStorageAPI.GetEntity(ctx.targetId)!;
+
+                    let owner_character = owner_entity.entity as Model;
+                    let owner_humanoidRootPart = owner_character.FindFirstChild(
+                        "HumanoidRootPart",
+                    ) as BasePart;
+
+                    let target_character = target_entity.entity as Model;
+                    let target_humanoidRootPart = target_character.FindFirstChild(
+                        "HumanoidRootPart",
+                    ) as BasePart;
+
+                    if (!statusEffectsAPI.HasStatus(ctx.targetId, "Block")) return false;
+
+                    let targetLookVector = target_humanoidRootPart.CFrame.LookVector;
+                    let directionToOwner = owner_humanoidRootPart.Position.sub(
+                        target_humanoidRootPart.Position,
+                    ).Unit;
+
+                    let dot = targetLookVector.Dot(directionToOwner);
+
+                    if (dot < 0.2) {
+                        return false;
+                    } else {
+                        return true;
+                    }
+                },
                 onSuccess: (ctx, emit) => {
                     let entity = entitiesStorageAPI.GetEntity(ctx.targetId);
                     if (!entity) {
@@ -99,7 +127,19 @@ export const Sekiro_M1_Combat = (ownerId: string) => {
         let target_humanoid = target_character.WaitForChild("Humanoid") as Humanoid;
 
         target_humanoid.TakeDamage(payload.damage);
-        statusEffectsAPI.CreateStatus("Stun", { duration: 0.5 }, true, payload.targetId);
+
+        if (target_humanoid.Health <= 0) {
+            statusEffectsAPI.CreateStatus("Dead", { duration: math.huge }, true, payload.targetId);
+        }
+
+        statusEffectsAPI.CreateStatus("Stun", { duration: 0.75 }, true, payload.targetId);
+
+        traceClipAPI.log(
+            payload.targetId,
+            "Proc",
+            `${payload.ownerId} Damaged ${payload.targetId}`,
+            { sourceId: payload.ownerId, targetId: payload.targetId },
+        );
 
         if (!characterName) return;
 
@@ -108,6 +148,7 @@ export const Sekiro_M1_Combat = (ownerId: string) => {
             "Hit",
             payload.targetId,
             target_character,
+            payload.currentClick,
             Workspace.GetServerTimeNow(),
         );
     });

@@ -18,8 +18,9 @@ export class TraceClipAPI {
         event: TraceEvent,
         message: string,
         extra?: Partial<TraceEntryLite>,
+        miscData?: Record<string, unknown>,
     ) {
-        this.service.log(actorId, event, message, extra);
+        this.service.log(actorId, event, message, extra, miscData);
     }
 
     public snapshot(actorId: string) {

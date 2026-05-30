@@ -43,10 +43,13 @@ export class Server_SetupAbilities {
                     if (ability?.ability) {
                         this.api.abilityAPI.Remove(playerStringUserId, ability.ability.config.name);
 
+                        ability.ability = undefined;
                         delete pack[key];
                     }
                 }
             }
+
+            this.currentPacks.clear();
 
             this.currentPacks.push(
                 CreatePack(playerData.Equipment.Character.Name, playerStringUserId),

@@ -142,7 +142,10 @@
 		"flamework:out/server/Implementation/Handlers/Blocking_Dummy@Blocking_Dummy": "server/Implementation/Handlers/Blocking_Dummy@Blocking_Dummy",
 		"flamework:out/shared/Application/Signals/ClientMovementAnimationsSignal@ClientMovementAnimationsSignal": "shared/Application/Signals/ClientMovementAnimationsSignal@ClientMovementAnimationsSignal",
 		"flamework:out/server/Implementation/Handlers/Dummy@Dummy": "server/Implementation/Handlers/Dummy@Dummy",
-		"flamework:out/server/Implementation/Handlers/Attack_Dummy@Attack_Dummy": "server/Implementation/Handlers/Attack_Dummy@Attack_Dummy"
+		"flamework:out/server/Implementation/Handlers/Attack_Dummy@Attack_Dummy": "server/Implementation/Handlers/Attack_Dummy@Attack_Dummy",
+		"flamework:out/shared/Implementation/Entities/VFXs/Sekiro/Basic_M1@Basic_M1": "shared/Implementation/Entities/VFXs/Sekiro/Basic_M1@Basic_M1",
+		"flamework:out/shared/Implementation/Entities/VFXs/Sekiro/Basic_Block@Basic_Block": "shared/Implementation/Entities/VFXs/Sekiro/Basic_Block@Basic_Block",
+		"flamework:out/shared/Implementation/Entities/VFXs/Sekiro/init@Sekiro": "shared/Implementation/Entities/VFXs/Sekiro/init@Sekiro"
 	},
 	"metadata": {}
 }

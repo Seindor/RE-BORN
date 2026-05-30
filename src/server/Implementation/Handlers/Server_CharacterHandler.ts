@@ -144,6 +144,16 @@ export class Server_CharacterHandler {
         this.createApperancy();
         this.CreateHandlers();
 
+        let humanoid = character.WaitForChild("Humanoid") as Humanoid;
+
+        humanoid.Died.Once(() => {
+            print("tag_1");
+            if (id) {
+                print("tag_2");
+                statusEffectsAPI.CreateStatus("Dead", { duration: math.huge }, true, id);
+            }
+        });
+
         if (Players.GetPlayerFromCharacter(character)) {
             character.Parent = Workspace.WaitForChild("Map").WaitForChild("Players");
             let player = Players.GetPlayerFromCharacter(character)!;

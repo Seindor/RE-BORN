@@ -100,8 +100,6 @@ export function Dash(ownerId: string) {
         },
         {
             onStartCheck() {
-                task.wait(PingUitl.GetRealPing(ownerId));
-
                 if (
                     replicatedStatusEffectsAPI.CheckClientStatuses(
                         ownerId,

@@ -51,7 +51,7 @@ export class ServerPlayerApplication implements OnStart {
             );
 
             player.CharacterAdded.Connect((character: Model) => {
-                new Server_CharacterHandler(character);
+                new Server_CharacterHandler(character, userId);
                 new Server_SetupAbilities(player);
             });
 

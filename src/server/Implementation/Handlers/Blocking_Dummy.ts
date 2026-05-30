@@ -23,5 +23,6 @@ export class Blocking_Dummy {
         let Pack = CreatePack("Sekiro", "Blocking_Dummy");
         let Block = Pack["Block"];
         abilityAPI.Execute(Block.ability!, "Start", true);
+        Block.ability?.config.states.push("Holding");
     }
 }
