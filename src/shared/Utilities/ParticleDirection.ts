@@ -11,8 +11,12 @@ export interface SimulatedParticleHit {
 
 export interface SimulateParticleParams {
     emitter: ParticleEmitter;
+
     origin: Vector3;
-    lookVector: Vector3;
+    direction: Vector3;
+
+    spread?: number; // degrees
+
     maxTime?: number;
     step?: number;
     ignore?: Instance[];
@@ -35,6 +39,7 @@ interface EmitOnImpactParams extends SimulateParticleParams {
 
     particleToEmit: BasePart;
     trail?: BasePart;
+
     directionOffset?: Vector3;
 
     onTrailUpdate?: (trail: BasePart, alpha: number, position: Vector3) => void;
@@ -50,10 +55,14 @@ function Simulate(params: SimulateParticleParams): SimulatedParticleHit {
 
     const speed = emitter.Speed.Min + math.random() * (emitter.Speed.Max - emitter.Speed.Min);
 
-    const spreadX = math.rad((math.random() - 0.5) * emitter.SpreadAngle.X);
-    const spreadY = math.rad((math.random() - 0.5) * emitter.SpreadAngle.Y);
+    const spread = params.spread ?? 0;
 
-    const directionCF = new CFrame(params.origin, params.origin.add(params.lookVector)).mul(
+    const spreadX = math.rad(math.random(-spread, spread));
+    const spreadY = math.rad(math.random(-spread, spread));
+
+    const baseDirection = params.direction.Unit;
+
+    const directionCF = new CFrame(params.origin, params.origin.add(baseDirection)).mul(
         CFrame.Angles(spreadY, spreadX, 0),
     );
 
@@ -103,7 +112,6 @@ function getCurveAlpha(t: number, style: EasingStyle, direction: EasingDirection
 }
 
 function arcOffset(alpha: number, height: number): number {
-    // параболический всплеск (красивый арк)
     return math.sin(alpha * math.pi) * height;
 }
 
@@ -113,22 +121,20 @@ function EmitOnImpact(params: EmitOnImpactParams) {
     if (!result.hitPosition || !result.hitNormal) return result;
 
     const origin = params.origin;
-    const directionOffset = params.directionOffset ?? Vector3.zero;
 
-    const rawTarget = result.hitPosition;
-
-    const target = rawTarget.add(directionOffset);
-
+    const target = result.hitPosition.add(params.directionOffset ?? Vector3.zero);
     const curve = params.curve;
 
     const delay = params.delay ?? 0;
 
     const trail = params.trail;
-    trail!.Position = origin;
+    if (trail) {
+        trail.Position = origin;
 
-    for (const child of trail!.GetChildren()) {
-        if (child.IsA("Trail")) {
-            child.Enabled = true;
+        for (const child of trail.GetChildren()) {
+            if (child.IsA("Trail")) {
+                child.Enabled = true;
+            }
         }
     }
 
@@ -148,24 +154,24 @@ function EmitOnImpact(params: EmitOnImpactParams) {
             const basePos = origin.Lerp(target, eased);
 
             const arcHeight = curve.maxArcHeight ?? 2;
+
             const finalPos = basePos.add(new Vector3(0, arcOffset(eased, arcHeight), 0));
 
-            /* TRAIL FIX (ВАЖНО) */
             if (trail) {
-                // ❗ НОРМАЛЬНЫЙ СТАРТ
                 if (elapsed - dt <= dt) {
                     trail.CFrame = new CFrame(origin, target);
                 }
 
-                // ❗ ОБНОВЛЕНИЕ
-                trail.CFrame = new CFrame(finalPos, finalPos.add(params.lookVector));
+                trail.CFrame = new CFrame(finalPos, finalPos.add(params.direction));
             }
 
-            /* IMPACT */
             if (rawAlpha >= 1) {
                 conn.Disconnect();
 
-                emitter.CFrame = new CFrame(target, target.add(result.hitNormal!)).mul(
+                const hitNormal = result.hitNormal;
+                if (!hitNormal) return;
+
+                emitter.CFrame = new CFrame(target, target.add(hitNormal)).mul(
                     CFrame.Angles(math.rad(90), 0, 0),
                 );
 
@@ -176,10 +182,6 @@ function EmitOnImpact(params: EmitOnImpactParams) {
 
     return result;
 }
-
-/* -------------------------
-   EXPORT
---------------------------*/
 
 export const ParticleDirection = {
     Simulate,

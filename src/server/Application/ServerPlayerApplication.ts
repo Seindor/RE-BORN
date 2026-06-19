@@ -14,7 +14,6 @@ import { CompositionRootShared } from "shared/DI/CompositionRootShared";
 
 import { ServerRegistry } from "server/DI/Generated/ServerRegistry";
 import { CompositionRootServer } from "server/DI/CompositionRootServer";
-import { InitSolvers } from "server/Implementation/Entities/Solvers";
 
 let sharedScope = CompositionRootShared.createScope();
 let serverScope = CompositionRootServer.createScope();
@@ -38,7 +37,6 @@ export class ServerPlayerApplication implements OnStart {
                 statusReplication.Sync(actorId, statuses);
             };
 
-            InitSolvers(userId);
             new LoadAllEntitiesHandler(player);
 
             this.api.abilitiesAPI.initActor(userId);

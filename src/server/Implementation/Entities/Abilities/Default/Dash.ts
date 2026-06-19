@@ -13,9 +13,11 @@ import { AllSoundPaths } from "shared/Utilities/SoundsUtil";
 const sharedScope = CompositionRootShared.createScope();
 const serverScope = CompositionRootServer.createScope();
 
+const solverAPI = sharedScope.resolve(SharedRegistry.Singletons.API.SolverAPI);
 const abilityAPI = sharedScope.resolve(SharedRegistry.Singletons.API.AbilityAPI);
 const entitiesStorageAPI = sharedScope.resolve(SharedRegistry.Singletons.API.EntitiesStorageAPI);
 const statusEffectsAPI = serverScope.resolve(ServerRegistry.Singletons.API.StatusEffectsAPI);
+const traceClipAPI = sharedScope.resolve(SharedRegistry.Singletons.API.TraceClipAPI);
 
 export function Dash(ownerId: string) {
     let ability = abilityAPI.Create(
@@ -66,19 +68,31 @@ export function Dash(ownerId: string) {
                 let character = entity.entity as Model;
                 let humanoidRootPart = character.WaitForChild("HumanoidRootPart") as BasePart;
 
-                statusEffectsAPI.CreateStatus("Dash", { duration: 0.5 }, true, ownerId);
-                statusEffectsAPI.CreateStatus("Dodge", { duration: 0.3 }, true, ownerId);
+                let walkSpeedSolver = solverAPI.GetSolver(`WalkSpeed_Solver_${ownerId}`)!;
 
-                entity.miscData.set("LastLaunchedVFX", [
-                    "Default_Dash",
-                    "Dash_Emit",
-                    character,
-                    ownerId,
-                ]);
+                statusEffectsAPI.CreateStatus("Dash", { duration: 0.5 }, true, ownerId);
+                statusEffectsAPI.CreateStatus("Dodge", { duration: 0.35 }, true, ownerId);
+
+                walkSpeedSolver.AddSolverNumber({
+                    phaseName: "Multiplier",
+                    sourceId: "Dash",
+                    value: 0,
+                    tags: ["Dash"],
+                });
+
+                ability._janitor.Add(
+                    task.delay(0.4, () => {
+                        walkSpeedSolver.RemoveSolverNumber("Dash");
+                    }),
+                    true,
+                    "RestoreWalkSpeed",
+                );
+
+                entity.SetState("LastLaunchedVFX", ["Default", "Dash_Emit", character, ownerId]);
 
                 ServerSignals.LaunchVFX.except(
                     Players.GetPlayerByUserId(tonumber(ownerId)!)!,
-                    "Default_Dash",
+                    "Default",
                     "Dash_Emit",
                     character,
                     ownerId,

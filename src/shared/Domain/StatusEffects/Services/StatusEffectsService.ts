@@ -1,4 +1,4 @@
-import { RunService } from "@rbxts/services";
+import { RunService, Workspace } from "@rbxts/services";
 import { StatusAggregate } from "../Aggregates/StatusAggregate";
 import { BlacklistedStatus, StackInstance, StatusAggregateOptions } from "../Types/StatusTypes";
 import { IStatusId as StatusId } from "../Types/StatusTypes";
@@ -10,10 +10,12 @@ export class StatusEffectsService {
         string,
         Array<{
             name?: string;
-            statuses: {
-                status: StatusId;
-                event: "Added" | "Removed";
-            }[];
+            statuses:
+                | {
+                      status: StatusId;
+                      event: "Added" | "Removed";
+                  }[]
+                | "All";
             callback: (event: "Added" | "Removed", status: StatusAggregate) => void;
         }>
     >();
@@ -53,6 +55,11 @@ export class StatusEffectsService {
         if (!subscriptions) return;
 
         for (const sub of subscriptions) {
+            if (sub.statuses === "All") {
+                sub.callback(event, status);
+                continue;
+            }
+
             const found = sub.statuses.find((x) => x.status === status.id && x.event === event);
 
             if (found) {
@@ -67,7 +74,7 @@ export class StatusEffectsService {
     }
 
     private ValidateDurations() {
-        const now = os.clock();
+        const now = Workspace.GetServerTimeNow();
 
         for (const [actorId, statuses] of this.statusEffectsMap) {
             for (let i = statuses.size() - 1; i >= 0; i--) {
@@ -157,10 +164,12 @@ export class StatusEffectsService {
 
     public Subscribe(
         actorId: string,
-        statuses: {
-            status: StatusId;
-            event: "Added" | "Removed";
-        }[],
+        statuses:
+            | {
+                  status: StatusId;
+                  event: "Added" | "Removed";
+              }[]
+            | "All",
         callback: (event: "Added" | "Removed", status: StatusAggregate) => void,
         name?: string,
     ) {
@@ -180,7 +189,10 @@ export class StatusEffectsService {
 
         return () => {
             const index = subs.indexOf(data);
-            if (index !== -1) subs.remove(index);
+
+            if (index !== -1) {
+                subs.remove(index);
+            }
         };
     }
 
@@ -213,8 +225,15 @@ export class StatusEffectsService {
 
         if (existinIndex !== -1) {
             const existing = list[existinIndex];
-            existing.spawned = os.clock();
-            existing.duration = newStatus.duration ?? existing.duration;
+            if (existing.priority < newStatus.priority) {
+                existing.duration = newStatus.duration ?? existing.duration;
+                existing.spawned = Workspace.GetServerTimeNow();
+            } else if (existing.priority === newStatus.priority) {
+                existing.duration = newStatus.duration;
+                existing.spawned = Workspace.GetServerTimeNow();
+            }
+
+            existing.apply(actorId);
             return existing;
         } else {
             list.push(newStatus);
@@ -227,7 +246,7 @@ export class StatusEffectsService {
     private policyAdd(actorId: string, newStatus: StatusAggregate, stack?: StackInstance) {
         const list = this.statusEffectsMap.get(actorId)!;
         const existingIndex = list.findIndex((status) => status.id === newStatus.id);
-        const now = os.clock();
+        const now = Workspace.GetServerTimeNow();
 
         if (existingIndex !== -1) {
             const existing = list[existingIndex];
@@ -328,7 +347,7 @@ export class StatusEffectsService {
             return existing;
         }
 
-        const now = os.clock();
+        const now = Workspace.GetServerTimeNow();
 
         const oldRemaining =
             existing.duration !== undefined
@@ -370,7 +389,6 @@ export class StatusEffectsService {
 
         const existsAfter = this.statusEffectsMap.get(actorId)!.some((s) => s.id === result.id);
 
-        // ✅ Added только если реально появился впервые
         if (!existedBefore && existsAfter) {
             this.notifySubscriptions(actorId, "Added", result);
         }
@@ -387,6 +405,18 @@ export class StatusEffectsService {
         }
 
         return list;
+    }
+
+    public GetStatus(actorId: string, statusName: StatusId): StatusAggregate | undefined {
+        const list = this.statusEffectsMap.get(actorId);
+
+        if (!list) return;
+
+        const index = list.findIndex((status) => status.id === statusName);
+
+        if (index === -1) return;
+
+        return list[index];
     }
 
     public RemoveStatus(actorId: string, statusName: StatusId) {

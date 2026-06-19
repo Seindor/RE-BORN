@@ -1,3 +1,5 @@
+import { Workspace } from "@rbxts/services";
+
 import {
     IStatusStackBehavior,
     StackInstance,
@@ -15,13 +17,16 @@ import {
 } from "../Types/StatusTypes";
 
 import { Janitor } from "@rbxts/janitor";
+import { EquippedWeapon } from "../Definations/EquippedWeapon";
 
 const Definitions: Partial<Record<StatusId, StatusDefinition>> = {
     Stun: Stun,
+    EquippedWeapon: EquippedWeapon,
 };
 
 const defaultStatusTemplate = (id: StatusId): StatusDefinition => ({
     id,
+    duration: math.huge,
     defaultModifiers: [],
     stackingPolicy: "Replace",
 });
@@ -46,7 +51,7 @@ export class StatusAggregate implements StatusAggregateType {
     public blacklist?: BlacklistedStatus[];
     public ignoreList?: BlacklistedStatus[];
 
-    public _janitor: Janitor<any>;
+    public _janitor = new Janitor<any>();
 
     public onApply?: (actorId: string, statusAggregate?: StatusAggregate) => void;
     public onAdded?: (actorId: string, statusInstance?: StatusAggregate) => void;
@@ -64,8 +69,8 @@ export class StatusAggregate implements StatusAggregateType {
             (definition.defaultModifiers ? [...definition.defaultModifiers] : []);
 
         this.priority = options?.priority ?? 1;
-        this.spawned = os.clock();
-        this.duration = options?.duration ?? math.huge;
+        this.spawned = Workspace.GetServerTimeNow();
+        this.duration = options?.duration ?? definition.duration ?? math.huge;
 
         this.stacks = options?.stacks ?? 1;
         this.maxStacks = options?.maxStacks ?? 1;
@@ -73,30 +78,62 @@ export class StatusAggregate implements StatusAggregateType {
         this.stackingPolicy = options?.stackingPolicy ?? definition.stackingPolicy ?? "Replace";
         this.stackBehavior = options?.stackBehavior ?? undefined;
 
-        this.tags = [];
+        this.tags = options?.tags ?? [];
         this.miscData = {};
 
         this.blacklist = [...(definition.defaultBlacklist ?? []), ...(options?.blacklist ?? [])];
         this.ignoreList = [...(definition.defaultIgnorelist ?? []), ...(options?.ignoreList ?? [])];
 
-        this._janitor = new Janitor();
-
-        this.onApply = options?.onApply ?? definition.onApply ?? undefined;
-        this.onAdded = options?.onAdded ?? definition.onAdded ?? undefined;
-        this.onRemoved = options?.onRemoved ?? definition.onRemoved ?? undefined;
-        this.onCheck = options?.onCheck ?? definition.onCheck ?? undefined;
+        this.onApply =
+            options?.onApply ??
+            definition.onApply ??
+            Definitions[`${statusId}`]?.onApply ??
+            undefined;
+        this.onAdded =
+            options?.onAdded ??
+            definition.onAdded ??
+            Definitions[`${statusId}`]?.onAdded ??
+            undefined;
+        this.onRemoved =
+            options?.onRemoved ??
+            definition.onRemoved ??
+            Definitions[`${statusId}`]?.onRemoved ??
+            undefined;
+        this.onCheck =
+            options?.onCheck ??
+            definition.onCheck ??
+            Definitions[`${statusId}`]?.onCheck ??
+            undefined;
     }
 
     apply(actorId: string) {
-        this.onApply?.(actorId, this);
+        this._janitor.Add(
+            task.spawn(() => {
+                this.onApply?.(actorId, this);
+            }),
+            true,
+            `onApply`,
+        );
     }
 
     add(actorId: string) {
-        this.onAdded?.(actorId, this);
+        this._janitor.Add(
+            task.spawn(() => {
+                this.onAdded?.(actorId, this);
+            }),
+            true,
+            `onAdded`,
+        );
     }
 
     remove(actorId: string) {
-        this.onRemoved?.(actorId, this);
+        this._janitor.Add(
+            task.spawn(() => {
+                this.onRemoved?.(actorId, this);
+            }),
+            true,
+            `onRemoved`,
+        );
     }
 
     check(actorId: string): boolean {

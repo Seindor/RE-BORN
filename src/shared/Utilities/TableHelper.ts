@@ -28,4 +28,12 @@ export namespace TableHelper {
         if (!typeIs(tbl, "table")) return true;
         return next(tbl as object) === undefined;
     }
+
+    export function IsTableEmpty(tbl: unknown): boolean {
+        for (const [index, object] of pairs(tbl as object)) {
+            return false;
+        }
+
+        return true;
+    }
 }

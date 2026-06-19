@@ -7,6 +7,7 @@ export type AbilityFactory = (ownerId: string) => AbilityAggregate;
 export type AbilityEntry = {
     abilityName: string;
     key: string;
+    priority: number;
     type: string;
     activatingType: "Manual" | "Signal";
     ability?: AbilityFactory;
@@ -27,6 +28,7 @@ export type PackResult = Record<
     {
         abilityName: string;
         key: string;
+        priority: number;
         type: string;
         activatingType: "Manual" | "Signal";
         ability?: AbilityAggregate;
@@ -46,6 +48,7 @@ export function CreatePack(packName: string, ownerId: string): PackResult {
         result[name as string] = {
             abilityName: entry.abilityName,
             key: entry.key,
+            priority: entry.priority,
             activatingType: entry.activatingType,
             ability: entry.ability ? entry.ability(ownerId) : undefined,
             type: entry.type,

@@ -16,6 +16,8 @@ const serverScope = CompositionRootServer.createScope();
 const abilityAPI = sharedScope.resolve(SharedRegistry.Singletons.API.AbilityAPI);
 const entitiesStorageAPI = sharedScope.resolve(SharedRegistry.Singletons.API.EntitiesStorageAPI);
 const statusEffectsAPI = serverScope.resolve(ServerRegistry.Singletons.API.StatusEffectsAPI);
+const solverAPI = sharedScope.resolve(SharedRegistry.Singletons.API.SolverAPI);
+const traceClipAPI = sharedScope.resolve(SharedRegistry.Singletons.API.TraceClipAPI);
 
 export function Run(ownerId: string) {
     let tapCount = 0;
@@ -39,6 +41,8 @@ export function Run(ownerId: string) {
                 let entity = entitiesStorageAPI.GetEntity(ownerId);
                 if (!entity) return false;
 
+                let walkSpeedSolver = solverAPI.GetSolver(`WalkSpeed_Solver_${ownerId}`)!;
+
                 let character = entity.entity as Model;
                 let humanoid = character.WaitForChild("Humanoid") as Humanoid;
 
@@ -49,8 +53,9 @@ export function Run(ownerId: string) {
                         ability.config.ignoreList ?? [],
                     )
                 ) {
+                    walkSpeedSolver.RemoveSolverNumber("Default_Run_OnStart");
+
                     if (entity.HasTag("Player")) {
-                        humanoid.WalkSpeed = 12;
                         ServerSignals.Ability.fire(
                             Players.GetPlayerFromCharacter(character)!,
                             "Default_Run",
@@ -72,13 +77,31 @@ export function Run(ownerId: string) {
                 let entity = entitiesStorageAPI.GetEntity(ownerId);
                 if (!entity) return;
 
+                let walkSpeedSolver = solverAPI.GetSolver(`WalkSpeed_Solver_${ownerId}`)!;
+
                 let character = entity.entity as Model;
                 let humanoid = character.WaitForChild("Humanoid") as Humanoid;
 
-                humanoid.WalkSpeed = 20;
+                walkSpeedSolver.SetSolverNumber({
+                    sourceId: "Default_Run_OnStart",
+                    phaseName: "Flat",
+                    value: 8,
+                    tags: ["Run"],
+                });
+
                 statusEffectsAPI.CreateStatus("Run", { duration: math.huge }, true, ownerId);
             },
             onEnd() {
+                let entity = entitiesStorageAPI.GetEntity(ownerId);
+                if (!entity) return;
+
+                let walkSpeedSolver = solverAPI.GetSolver(`WalkSpeed_Solver_${ownerId}`)!;
+
+                let character = entity.entity as Model;
+                let humanoid = character.WaitForChild("Humanoid") as Humanoid;
+
+                walkSpeedSolver.RemoveSolverNumber("Default_Run_OnStart");
+
                 statusEffectsAPI.RemoveStatus(ownerId, "Run");
             },
             onInterrupt() {},

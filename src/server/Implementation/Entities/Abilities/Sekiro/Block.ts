@@ -2,17 +2,12 @@ import { Players, Workspace, RunService } from "@rbxts/services";
 
 import { Dependency } from "@flamework/core";
 import { ServerSignals } from "shared/Implementation/Entities/SerrverSignals";
-import { StatusEffectsReplication } from "server/Application/StatusEffectsReplication";
-import { IAbilityBlacklist } from "shared/Domain/Ability/Types/AbilityTypes";
 
 import { SharedRegistry } from "shared/DI/Generated/SharedRegistry";
 import { CompositionRootShared } from "shared/DI/CompositionRootShared";
 import { CompositionRootServer } from "server/DI/CompositionRootServer";
 import { ServerRegistry } from "server/DI/Generated/ServerRegistry";
-import { AllSoundPaths } from "shared/Utilities/SoundsUtil";
-import { PingUitl } from "shared/Utilities/PingUtil";
 import { StepRunner } from "server/Application/StepRunner";
-import { Sekiro_M1_HitContext } from "server/Implementation/Handlers/Combat/Sekiro/Sekiro_M1";
 
 const sharedScope = CompositionRootShared.createScope();
 const serverScope = CompositionRootServer.createScope();
@@ -20,14 +15,10 @@ const serverScope = CompositionRootServer.createScope();
 const abilityAPI = sharedScope.resolve(SharedRegistry.Singletons.API.AbilityAPI);
 const entitiesStorageAPI = sharedScope.resolve(SharedRegistry.Singletons.API.EntitiesStorageAPI);
 const statusEffectsAPI = serverScope.resolve(ServerRegistry.Singletons.API.StatusEffectsAPI);
-const hitboxAPI = sharedScope.resolve(SharedRegistry.Singletons.API.HitboxAPI);
-const eventBusAPI = sharedScope.resolve(SharedRegistry.Singletons.API.EventBusAPI);
-const phaseResolverAPI = sharedScope.resolve(SharedRegistry.Singletons.API.PhaseResolverAPI);
 const solverAPI = sharedScope.resolve(SharedRegistry.Singletons.API.SolverAPI);
+const traceClipAPI = sharedScope.resolve(SharedRegistry.Singletons.API.TraceClipAPI);
 
 export function Block(ownerId: string) {
-    const stepRunner = Dependency<StepRunner>();
-
     let ability = abilityAPI.Create(
         {
             name: "Sekiro_Block",
@@ -35,7 +26,7 @@ export function Block(ownerId: string) {
             states: ["Idle"],
             lastUsed: 0,
             types: [{ name: "Defense", level: 1 }],
-            additionalBlacklist: ["Dash", "WeaponClick", "Parry"],
+            additionalBlacklist: [`Dash`, `WeaponClick`, `BlockBreak`],
             cooldown: 0.25,
             duration: math.huge,
             minDuration: 0,
@@ -50,7 +41,6 @@ export function Block(ownerId: string) {
                         ability.config.ignoreList ?? [],
                     )
                 ) {
-                    print("SERVER BLOCK RETURN");
                     return false;
                 }
 
@@ -73,9 +63,34 @@ export function Block(ownerId: string) {
                 let entity = entitiesStorageAPI.GetEntity(ownerId)!;
                 let character = entity.entity as Model;
 
-                statusEffectsAPI.CreateStatus("Block", { duration: math.huge }, true, ownerId);
+                let walkSpeedSolver = solverAPI.GetSolver(`WalkSpeed_Solver_${ownerId}`)!;
 
-                entity.miscData.set("LastLaunchedVFX", [
+                statusEffectsAPI.Subscribe(
+                    ownerId,
+                    [{ status: `BlockBreak`, event: `Added` }],
+                    (event, status) => {
+                        this.onInterrupt();
+                        statusEffectsAPI.Unsubscribe(ownerId, `BlockBreakCheck`);
+                    },
+                    `BlockBreakCheck`,
+                );
+
+                statusEffectsAPI.CreateStatus("Block", { duration: math.huge }, true, ownerId);
+                statusEffectsAPI.CreateStatus(
+                    "EquippedWeapon",
+                    { duration: math.huge },
+                    true,
+                    ownerId,
+                );
+
+                walkSpeedSolver.AddSolverNumber({
+                    phaseName: "Multiplier",
+                    sourceId: "Block",
+                    value: 0.5,
+                    tags: ["Block"],
+                });
+
+                entity.SetState("LastLaunchedVFX", [
                     "Sekiro",
                     "Block",
                     ownerId,
@@ -111,17 +126,20 @@ export function Block(ownerId: string) {
                         Workspace.GetServerTimeNow(),
                     );
                 }
-
-                print("Server_Block_Start");
             },
             onEnd() {
                 let entity = entitiesStorageAPI.GetEntity(ownerId)!;
                 let character = entity.entity as Model;
 
+                let walkSpeedSolver = solverAPI.GetSolver(`WalkSpeed_Solver_${ownerId}`)!;
+
                 ability._janitor.Remove("BlockCheck");
                 statusEffectsAPI.RemoveStatus(ownerId, "Block");
+                statusEffectsAPI.CreateStatus(`EquippedWeapon`, undefined, true, ownerId);
 
-                entity.miscData.set("LastLaunchedVFX", [
+                walkSpeedSolver.RemoveSolverNumber("Block");
+
+                entity.SetState("LastLaunchedVFX", [
                     "Sekiro",
                     "BlockStop",
                     ownerId,
@@ -147,20 +165,47 @@ export function Block(ownerId: string) {
                         Workspace.GetServerTimeNow(),
                     );
                 }
-
-                print("Server_Block_End");
             },
             onInterrupt() {
+                let entity = entitiesStorageAPI.GetEntity(ownerId)!;
+                let character = entity.entity as Model;
+
+                let walkSpeedSolver = solverAPI.GetSolver(`WalkSpeed_Solver_${ownerId}`)!;
+
                 ability._janitor.Remove("BlockCheck");
+                statusEffectsAPI.RemoveStatus(ownerId, "Block");
+                statusEffectsAPI.CreateStatus(`EquippedWeapon`, undefined, true, ownerId);
+
+                walkSpeedSolver.RemoveSolverNumber("Block");
+
+                entity.SetState("LastLaunchedVFX", [
+                    "Sekiro",
+                    "BlockStop",
+                    ownerId,
+                    character,
+                    Workspace.GetServerTimeNow(),
+                ]);
+
+                ServerSignals.LaunchVFX.broadcast(
+                    "Sekiro",
+                    "BlockStop",
+                    ownerId,
+                    character,
+                    Workspace.GetServerTimeNow(),
+                );
             },
             onReject() {
                 let entity = entitiesStorageAPI.GetEntity(ownerId)!;
                 let character = entity.entity as Model;
 
+                let walkSpeedSolver = solverAPI.GetSolver(`WalkSpeed_Solver_${ownerId}`)!;
+
                 ability._janitor.Remove("BlockCheck");
                 statusEffectsAPI.RemoveStatus(ownerId, "Block");
 
-                entity.miscData.set("LastLaunchedVFX", [
+                walkSpeedSolver.RemoveSolverNumber("Block");
+
+                entity.SetState("LastLaunchedVFX", [
                     "Sekiro",
                     "BlockStop",
                     ownerId,
@@ -193,8 +238,6 @@ export function Block(ownerId: string) {
                         Workspace.GetServerTimeNow(),
                     );
                 }
-
-                print("Server_Block_Reject");
             },
         },
     );

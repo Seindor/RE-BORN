@@ -1,4 +1,6 @@
 export const AnimationsPriorities = {
-    CombatAnimation: Enum.AnimationPriority.Action2,
+    GreatAnimation: Enum.AnimationPriority.Action4,
+    CombatAnimation: Enum.AnimationPriority.Action3,
+    DefenseAnimations: Enum.AnimationPriority.Action2,
     EmoteAnimation: Enum.AnimationPriority.Action,
 };

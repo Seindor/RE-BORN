@@ -1,5 +1,4 @@
-import { RunService } from "@rbxts/services";
-
+import { RunService, Workspace } from "@rbxts/services";
 import {
     IAbility,
     IAbilityBehaviour,
@@ -19,7 +18,7 @@ export class AbilityAggregate implements IAbility {
 
     public _janitor = new Janitor<any>();
 
-    private destroyed = false as boolean;
+    public destroyed = false as boolean;
     private ending = false;
 
     constructor(_config: IAbilityConfig, _behaviours: IAbilityBehaviour) {
@@ -29,6 +28,8 @@ export class AbilityAggregate implements IAbility {
 
     private validateDuration(check: boolean) {
         if (this.destroyed) return;
+        if (TableHelper.IsTableEmpty(this)) return;
+
         this._janitor.Remove("validateDuration");
 
         if (this.config.manualEnd) return;
@@ -40,7 +41,7 @@ export class AbilityAggregate implements IAbility {
                 return;
             }
 
-            const now = os.clock();
+            const now = Workspace.GetServerTimeNow();
             const elapsed = now - this.config.lastUsed;
 
             if (elapsed >= this.config.duration) {
@@ -53,6 +54,8 @@ export class AbilityAggregate implements IAbility {
 
     private validateCooldown() {
         if (this.destroyed) return;
+        if (TableHelper.IsTableEmpty(this)) return;
+
         this._janitor.Remove("validateCooldown");
 
         const connection = RunService.Heartbeat.Connect(() => {
@@ -67,6 +70,7 @@ export class AbilityAggregate implements IAbility {
     }
 
     private canStart(check: boolean): boolean {
+        if (TableHelper.IsTableEmpty(this)) return false;
         if (this.destroyed) return false;
         if (!check) return true;
         if (this.HasState("Locked")) return false;
@@ -76,48 +80,57 @@ export class AbilityAggregate implements IAbility {
     }
 
     private canEnd(check: boolean): boolean {
+        if (TableHelper.IsTableEmpty(this)) return false;
         if (!this.HasState("Active")) return false;
         if (this.ending) return false;
         return true;
     }
 
     public AddState(state: IAbilityStates) {
-        if (!this) return;
+        if (TableHelper.IsTableEmpty(this)) return;
         ArrayHelper.addString(this.config.states, state, true);
     }
 
     public RemoveState(state: IAbilityStates) {
+        if (TableHelper.IsTableEmpty(this)) return;
         if (!this || !this.config || !this.config.states) return;
         ArrayHelper.removeString(this.config.states, state, true);
     }
 
     public HasState(state: IAbilityStates) {
+        if (TableHelper.IsTableEmpty(this)) return;
         return ArrayHelper.has(this.config.states, state);
     }
 
     public AddTag(tag: string) {
+        if (TableHelper.IsTableEmpty(this)) return;
         if (!this.config.tags) this.config.tags = [];
         if (!this.config.tags.includes(tag)) this.config.tags.push(tag);
     }
 
     public RemoveTag(tag: string) {
-        if (!this) return;
+        if (TableHelper.IsTableEmpty(this)) return;
         if (!this.config.tags) return;
         const index = this.config.tags.indexOf(tag);
         if (index !== -1) this.config.tags.remove(index);
     }
 
     public HasTag(tag: string): boolean {
+        if (TableHelper.IsTableEmpty(this)) return false;
+
         return this.config.tags?.includes(tag) ?? false;
     }
 
     public GetTags(): string[] {
         if (this.destroyed) return [];
+        if (TableHelper.IsTableEmpty(this)) return [];
+
         return this.config.tags ?? [];
     }
 
     public GetBlacklist(): IStatusId[] {
         if (this.destroyed) return [];
+        if (TableHelper.IsTableEmpty(this)) return [];
         const global = IAbilityBlacklist;
         const additional = this.config.additionalBlacklist ?? [];
         return [...global, ...additional];
@@ -125,26 +138,42 @@ export class AbilityAggregate implements IAbility {
 
     public Execute(callBackName: "Start" | "End", check: boolean, ...args: unknown[]) {
         if (this.destroyed) return;
+        if (TableHelper.IsTableEmpty(this)) return;
 
         if (callBackName === "Start") {
             if (!this.canStart(check)) {
-                this.behaviours.onReject?.(...args);
+                this._janitor.Add(
+                    task.spawn(() => {
+                        this.behaviours.onReject?.(...args);
+                    }),
+                    true,
+                );
                 return;
             }
 
             if (check && this.behaviours.onStartCheck(...args) !== true) {
-                this.behaviours.onReject?.(...args);
+                this._janitor.Add(
+                    task.spawn(() => {
+                        this.behaviours.onReject?.(...args);
+                    }),
+                    true,
+                );
                 return;
             }
 
             this.RemoveState("Idle");
 
-            this.config.lastUsed = os.clock();
+            this.config.lastUsed = Workspace.GetServerTimeNow();
 
             this.AddState("Active");
             this.ending = false;
 
-            this.behaviours.onStart(...args);
+            this._janitor.Add(
+                task.spawn(() => {
+                    this.behaviours.onStart(...args);
+                }),
+                true,
+            );
 
             this.validateDuration(check);
             return;
@@ -161,7 +190,12 @@ export class AbilityAggregate implements IAbility {
 
         this.AddState("Cooldown");
 
-        this.behaviours.onEnd(...args);
+        this._janitor.Add(
+            task.spawn(() => {
+                this.behaviours.onEnd(...args);
+            }),
+            true,
+        );
 
         this.validateCooldown();
 
@@ -172,6 +206,8 @@ export class AbilityAggregate implements IAbility {
 
     public Interrupt(...args: unknown[]) {
         if (this.destroyed) return;
+        if (TableHelper.IsTableEmpty(this)) return;
+
         // if (!this.HasState("Active")) {
         //     print("RETURNRR");
         //     return;
@@ -180,11 +216,17 @@ export class AbilityAggregate implements IAbility {
         this.RemoveState("Active");
         this.RemoveState("Holding");
 
-        this.behaviours.onInterrupt(...args);
+        this._janitor.Add(
+            task.spawn(() => {
+                this.behaviours.onInterrupt(...args);
+            }),
+        );
     }
 
     public Reject(...args: unknown[]) {
         if (this.destroyed) return;
+        if (TableHelper.IsTableEmpty(this)) return;
+
         this.behaviours.onReject?.(...args);
     }
 
@@ -193,7 +235,8 @@ export class AbilityAggregate implements IAbility {
     }
 
     public OnCooldown(): boolean {
-        const now = os.clock();
+        if (TableHelper.IsTableEmpty(this)) return true;
+        const now = Workspace.GetServerTimeNow();
         return now - this.config.lastUsed <= this.config.cooldown;
     }
 

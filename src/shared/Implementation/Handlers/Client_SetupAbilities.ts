@@ -61,7 +61,9 @@ export class Client_SetupAbilities implements OnStart {
                     this.currentPacks.clear();
                 };
 
-                humanoid.Died.Once(() => removeExistingAbilities());
+                humanoid.Died.Once(() => {
+                    removeExistingAbilities();
+                });
 
                 removeExistingAbilities();
 

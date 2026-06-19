@@ -12,11 +12,19 @@ import { SharedRegistry } from "shared/DI/Generated/SharedRegistry";
 import { CompositionRootShared } from "shared/DI/CompositionRootShared";
 import { ServerRegistry } from "server/DI/Generated/ServerRegistry";
 import { CompositionRootServer } from "server/DI/CompositionRootServer";
+import { WalkSpeedHandler } from "./Movement/WalkSpeedHandler";
+import { JumpPowerHandler } from "./Movement/JumpPowerHandler";
+import { InitSolvers } from "../Entities/Solvers";
+import { StatusEffectsLog } from "./StatusEffectsLog";
+import { HealthHandler } from "./Defense/HealthHandler";
+import { PostureHandler } from "./Defense/PostureHandler";
 
 let sharedScope = CompositionRootShared.createScope();
 let serverScope = CompositionRootServer.createScope();
 
+let animationsAPI = sharedScope.resolve(SharedRegistry.Singletons.API.AnimationsAPI);
 let statusEffectsAPI = serverScope.resolve(ServerRegistry.Singletons.API.StatusEffectsAPI);
+let hitboxAPI = sharedScope.resolve(SharedRegistry.Singletons.API.HitboxAPI);
 
 export class Server_CharacterHandler {
     public character: Model;
@@ -108,7 +116,7 @@ export class Server_CharacterHandler {
         handle.Name = handleName;
         handle.Transparency = 1;
         handle.CanCollide = false;
-        handle.Massless = false;
+        handle.Massless = true;
         handle.CanQuery = false;
         handle.AudioCanCollide = false;
 
@@ -136,7 +144,32 @@ export class Server_CharacterHandler {
         this.createHandler("RH");
     }
 
-    constructor(character: Model, id?: string, characterName?: string) {
+    constructor(character: Model, id: string, characterName?: string) {
+        let healthHandler = Dependency<HealthHandler>();
+        let postureHandler = Dependency<PostureHandler>();
+
+        let walkSpeedHandler = Dependency<WalkSpeedHandler>();
+        let jumpPowerHandler = Dependency<JumpPowerHandler>();
+
+        hitboxAPI.TrackModel(character);
+
+        if (id) {
+            this.api.entitiesStorageAPI.AddEntity(id, character);
+            InitSolvers(id);
+
+            healthHandler.Init(id);
+            postureHandler.Init(id);
+
+            walkSpeedHandler.Init(id);
+            jumpPowerHandler.Init(id);
+
+            animationsAPI.RemoveActorAnimators(id);
+            new StatusEffectsLog(id);
+        }
+
+        let entity = this.api.entitiesStorageAPI.GetEntity(id)!;
+        let humanoid = character.WaitForChild("Humanoid") as Humanoid;
+
         this.character = character;
         this.apperancy = this.createApperancy();
         this.apperancy.Parent = this.character;
@@ -144,12 +177,10 @@ export class Server_CharacterHandler {
         this.createApperancy();
         this.CreateHandlers();
 
-        let humanoid = character.WaitForChild("Humanoid") as Humanoid;
-
         humanoid.Died.Once(() => {
-            print("tag_1");
+            hitboxAPI.UntrackModel(character);
             if (id) {
-                print("tag_2");
+                animationsAPI.RemoveActorAnimators(id);
                 statusEffectsAPI.CreateStatus("Dead", { duration: math.huge }, true, id);
             }
         });
@@ -158,7 +189,6 @@ export class Server_CharacterHandler {
             character.Parent = Workspace.WaitForChild("Map").WaitForChild("Players");
             let player = Players.GetPlayerFromCharacter(character)!;
             let playerStringUserId = tostring(player?.UserId);
-            let entity = this.api.entitiesStorageAPI.AddEntity(playerStringUserId, character);
             character.AddTag("Player");
             entity.AddTag("Player");
 
@@ -170,10 +200,10 @@ export class Server_CharacterHandler {
 
             const playerData = atomReplication.GetPlayersDataAtom().Get(playerStringUserId)!;
 
-            entity.miscData.set("CharacterName", playerData.Equipment.Character.Name);
+            entity.SetState("CharacterName", playerData.Equipment.Character.Name);
             SetupCombat(playerStringUserId, playerData.Equipment.Character.Name);
 
-            entity.miscData.set("LastLaunchedVFX", [
+            entity.SetState("LastLaunchedVFX", [
                 player,
                 playerData.Equipment.Character.Name,
                 "Spawn",
@@ -193,11 +223,13 @@ export class Server_CharacterHandler {
         } else {
             if (!id || !characterName) return;
             character.Parent = Workspace.WaitForChild("Map").WaitForChild("NPCs");
-            let entity = this.api.entitiesStorageAPI.AddEntity(id, character);
-            entity.miscData.set("CharacterName", characterName);
-            SetupCombat(id, characterName);
 
+            entity.AddTag("NPC");
             character.AddTag("NPC");
+
+            entity.SetState("CharacterName", characterName);
+
+            SetupCombat(id, characterName);
         }
     }
 }

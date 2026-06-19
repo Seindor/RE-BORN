@@ -2,6 +2,7 @@ export type ISounds = {
     ["Default"]: {
         ["Dashes"]: {
             ["Dash"]: Sound;
+            ["Dodge"]: Sound;
             ["Roll"]: Sound;
         } & Folder;
         ["Fients"]: {
@@ -17,7 +18,7 @@ export type ISounds = {
             ["3"]: Sound;
             ["4"]: Sound;
         } & Folder;
-        ["Parry"]: {
+        ["Parried"]: {
             ["1"]: Sound;
             ["2"]: Sound;
             ["3"]: Sound;

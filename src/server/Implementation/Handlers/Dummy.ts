@@ -16,10 +16,10 @@ export class Dummy {
         let statusEffectsAPI = serverScope.resolve(ServerRegistry.Singletons.API.StatusEffectsAPI);
 
         statusEffectsAPI.InitActor("Dummy");
+        InitSolvers("Dummy");
 
         new Server_CharacterHandler(npc, "Dummy", "Sekiro");
 
-        InitSolvers("Dummy");
         let Pack = CreatePack("Sekiro", "Dummy");
     }
 }

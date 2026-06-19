@@ -5,6 +5,7 @@ import { CompositionRootShared } from "shared/DI/CompositionRootShared";
 import { Controller, Dependency } from "@flamework/core";
 import { ClientAtomReplication } from "shared/Application/ClientAtomReplication";
 import { Client_MovementAnimations } from "./Client_MovementAnimations";
+import { Janitor } from "@rbxts/janitor";
 
 let sharedScope = CompositionRootShared.createScope();
 
@@ -13,6 +14,7 @@ export class Client_CharacterHandler {
     public player = Players.LocalPlayer;
     public playerStringUserId = tostring(this.player.UserId);
     public character?: Model;
+    public _janitor = new Janitor<any>();
 
     public api = {
         eventBusAPI: sharedScope.resolve(SharedRegistry.Singletons.API.EventBusAPI),
@@ -28,6 +30,18 @@ export class Client_CharacterHandler {
     public Init(character: Model) {
         this.character = character;
 
+        this._janitor.Add(
+            character.AttributeChanged.Connect((attribute: string) => {
+                if (attribute === "WalkSpeed") {
+                    let humanoid = character.WaitForChild("Humanoid") as Humanoid;
+
+                    humanoid.WalkSpeed = character.GetAttribute("WalkSpeed")! as number;
+                }
+            }),
+            "Disconnect",
+            "WalkSpeedHandler",
+        );
+
         task.spawn(() => {
             if (!this.debris.has("Client_MovementAnimations")) {
                 !this.debris.set("Client_MovementAnimations", new Client_MovementAnimations());
@@ -42,7 +56,7 @@ export class Client_CharacterHandler {
 
             let data = atomReplication.GetLocalPlayerData()!;
             let entity = this.api.entitiesStorageAPI.GetEntity(character)!;
-            entity.miscData.set("CharacterName", data.Equipment.Character.Name);
+            entity.SetState(`CharacterName`, data.Equipment.Character.Name);
 
             client_MovementAnimations.Init(this.playerStringUserId, character);
 

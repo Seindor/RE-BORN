@@ -3,7 +3,7 @@ import type { TraceEntryLite } from "../Types/TraceTypes";
 export class TraceClipAggregate {
     private entries: TraceEntryLite[] = [];
 
-    constructor(private windowSeconds = 30) {}
+    constructor(private windowSeconds = 100) {}
 
     push(entry: TraceEntryLite) {
         this.entries.push(entry);

@@ -2,6 +2,7 @@ import { StatusDefinition } from "../Types/StatusTypes";
 
 export const Dead: StatusDefinition = {
     id: "Dead",
+    duration: math.huge,
 
     stackingPolicy: "Replace",
 

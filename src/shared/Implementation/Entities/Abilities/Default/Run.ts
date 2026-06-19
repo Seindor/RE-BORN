@@ -1,3 +1,5 @@
+import { RunService } from "@rbxts/services";
+
 import { ClientSignals } from "../../ClientSignals";
 import { IAbilityBlacklist } from "shared/Domain/Ability/Types/AbilityTypes";
 import { SharedRegistry } from "shared/DI/Generated/SharedRegistry";
@@ -15,6 +17,12 @@ export function Run(ownerId: string) {
         const entity = entitiesStorageAPI.GetEntity(ownerId)!;
         const character = entity.entity as Model;
         return character.WaitForChild("Humanoid") as Humanoid;
+    };
+
+    const getCharacter = () => {
+        const entity = entitiesStorageAPI.GetEntity(ownerId)!;
+        const character = entity.entity as Model;
+        return character as Model;
     };
 
     const startSprint = () => {
@@ -44,7 +52,7 @@ export function Run(ownerId: string) {
         if (!ability.config.miscData!.get("IsSprinting")! && !ignoreCheck) return;
 
         ClientSignals.Ability.fire("Default_Run", "Hold", "End", true);
-        getHumanoid().WalkSpeed = 12;
+        getHumanoid().WalkSpeed = (getCharacter().GetAttribute("WalkSpeed") as number) ?? 12;
 
         ability.config.cooldown = 0.5;
         ability._janitor.Remove("ChangeCooldown");
@@ -116,8 +124,19 @@ export function Run(ownerId: string) {
             },
             onStart() {
                 startSprint();
+
+                ability._janitor.Add(
+                    RunService.Heartbeat.Connect(() => {
+                        if (!ability.config.states.includes("Holding")) {
+                            ability.Execute("End", true);
+                        }
+                    }),
+                    "Disconnect",
+                    "HoldingCheck",
+                );
             },
             onEnd(instaStop?: boolean) {
+                ability._janitor.Remove("HoldingCheck");
                 stopSprint();
             },
             onInterrupt() {

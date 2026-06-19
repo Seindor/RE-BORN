@@ -1,9 +1,18 @@
 import { Phase, SolverNumber, SolverProperties } from "../Types/SolverTypes";
 import { Calculator as _Calculator } from "../Components/Calculator";
 import { TableHelper } from "shared/Utilities/TableHelper";
+import { Janitor } from "@rbxts/janitor";
+
+type method = ["Set", "Add", "Remove", "Calculate"][number];
+
+type subscriber = {
+    methods: method[];
+    callback: Callback;
+};
 
 export class SolverAggregate {
     private calculator = new _Calculator();
+    public _janitor = new Janitor<any>();
 
     public name: string;
     public phases: Phase[];
@@ -11,13 +20,15 @@ export class SolverAggregate {
     public solverNumbers: SolverNumber[] = [];
     public miscData: Record<string, any> = {};
 
+    private subscribers = new Map<string, subscriber>();
+
     constructor(properties: SolverProperties) {
         this.name = properties.solverName ?? "Unknown Solver";
         this.phases = properties.phases ?? [];
         this.tags = properties.tags ?? [];
     }
 
-    public AddSolverNumber(solverNumber: SolverNumber) {
+    public AddSolverNumber(solverNumber: SolverNumber, ...args: unknown[]) {
         const phase = this.phases.find((_phase) => _phase.name === solverNumber.phaseName);
         if (!phase) {
             warn(`Cannot find Phase: ${solverNumber.phaseName} in ${this.name}`);
@@ -30,12 +41,11 @@ export class SolverAggregate {
 
         if (!exist) {
             this.solverNumbers.push(solverNumber);
-        } else {
-            warn(`${solverNumber.sourceId} already exists on ${this.name} SolverNumbers.`);
+            this.notify("Add", ...args);
         }
     }
 
-    public SetSolverNumber(solverNumber: SolverNumber) {
+    public SetSolverNumber(solverNumber: SolverNumber, ...args: unknown[]) {
         const phase = this.phases.find((_phase) => _phase.name === solverNumber.phaseName);
         if (!phase) {
             warn(`Cannot find Phase: ${solverNumber.phaseName} in ${this.name}`);
@@ -48,20 +58,29 @@ export class SolverAggregate {
 
         if (index === -1) {
             this.solverNumbers.push(solverNumber);
+            this.notify("Set", ...args);
             return;
         }
 
         this.solverNumbers[index] = solverNumber;
+        this.notify("Set", ...args);
     }
 
-    public RemoveSolverNumber(sourceId: string) {
+    public RemoveSolverNumber(sourceId: string, ...args: unknown[]) {
         const index = this.solverNumbers.findIndex((_number) => _number.sourceId === sourceId);
         if (index === -1) return;
 
         this.solverNumbers.remove(index);
+        this.notify("Remove", ...args);
     }
 
-    public CalculateValue(baseValue: number): number {
+    public RemoveSolverNumbers(...args: unknown[]) {
+        this.solverNumbers = [];
+
+        this.notify("Remove", ...args);
+    }
+
+    public CalculateValue(baseValue: number, ...args: unknown[]): number {
         const valuesByPhase = this.GetValuesByPhase();
         const sortedPhases = [...this.phases].sort((a, b) => a.priority < b.priority);
 
@@ -78,6 +97,8 @@ export class SolverAggregate {
                 phase.subAlgorithm,
             );
         }
+
+        this.notify("Calculate", ...args);
 
         return current;
     }
@@ -99,7 +120,36 @@ export class SolverAggregate {
         return valuesByPhase;
     }
 
+    public Subscribe(methods: method[], indexName: string, callBack: Callback) {
+        if (this.subscribers.has(indexName)) {
+            this.Unsubscribe(indexName);
+        }
+
+        this.subscribers.set(indexName, { methods: methods, callback: callBack });
+    }
+
+    public Unsubscribe(indexName: string) {
+        if (!this.subscribers.has(indexName)) return;
+
+        this.subscribers.delete(indexName);
+    }
+
+    private notify(methodId: method, ...args: unknown[]) {
+        for (const [index, subscriber] of this.subscribers) {
+            if (subscriber.methods.includes(methodId)) {
+                this._janitor.Add(
+                    task.spawn(() => {
+                        subscriber.callback(...args);
+                    }),
+                    true,
+                    `${index}_${methodId}_Callback`,
+                );
+            }
+        }
+    }
+
     public Destroy() {
+        this._janitor.Cleanup();
         TableHelper.ClearTable(this);
     }
 }

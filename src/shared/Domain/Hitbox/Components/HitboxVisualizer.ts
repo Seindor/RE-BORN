@@ -33,14 +33,14 @@ class HitboxVisualizerClass {
         if (isTouching) {
             part.Color = Color3.fromRGB(33, 255, 82);
 
-            this._janitor.Remove(id);
+            this._janitor.Remove(`${id}_LastTouch`);
 
             this._janitor.Add(
                 task.delay(0.25, () => {
                     part.RemoveTag("LastTouch");
                 }),
                 true,
-                id,
+                `${id}_LastTouch`,
             );
         } else {
             if (!part.HasTag("LastTouch")) {

@@ -28,29 +28,39 @@ export class AbilitiesInputs implements OnStart {
                 const state =
                     inputState === Enum.UserInputState.Begin ? "Start" : ("End" as "Start" | "End");
 
+                const abilities = new Array<(typeof setupAbilities.currentPacks)[number][string]>();
+
                 for (const pack of setupAbilities.currentPacks) {
                     for (const [_, entry] of pairs(pack)) {
-                        if (entry.key !== inputName) continue;
+                        if (entry.key === inputName) {
+                            abilities.push(entry);
+                        }
+                    }
+                }
 
-                        if (state === "Start") {
-                            if (entry.type === "Hold") {
-                                entry.ability?.AddState("Holding");
-                            }
-                        } else {
-                            if (entry.type === "Hold") {
-                                entry.ability?.RemoveState("Holding");
-                            }
+                abilities.sort((a, b) => a.priority > b.priority);
 
-                            if (entry.type === "Switch") continue;
+                for (const entry of abilities) {
+                    if (state === "Start") {
+                        if (entry.type === "Hold") {
+                            entry.ability?.AddState("Holding");
+                        }
+                    } else {
+                        if (entry.type === "Hold") {
+                            entry.ability?.RemoveState("Holding");
                         }
 
-                        if (entry.activatingType === "Manual") {
-                            if (!entry.ability) continue;
-
-                            abilityAPI.Execute(entry.ability, state, true, inputObject);
-                        } else {
-                            ClientSignals.Ability.fire(entry.abilityName, entry.type, state);
+                        if (entry.type === "Switch") {
+                            continue;
                         }
+                    }
+
+                    if (entry.activatingType === "Manual") {
+                        if (!entry.ability) continue;
+
+                        abilityAPI.Execute(entry.ability, state, true, inputObject);
+                    } else {
+                        ClientSignals.Ability.fire(entry.abilityName, entry.type, state);
                     }
                 }
             },

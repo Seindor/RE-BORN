@@ -1,9 +1,13 @@
 import { ServerRegistry } from "server/DI/Generated/ServerRegistry";
 import { CompositionRootServer } from "server/DI/CompositionRootServer";
 
-const ServerScope = CompositionRootServer.createScope();
+import { SharedRegistry } from "shared/DI/Generated/SharedRegistry";
+import { CompositionRootShared } from "shared/DI/CompositionRootShared";
 
-const traceClipAPI = ServerScope.resolve(ServerRegistry.Singletons.API.TraceClipAPI);
+const ServerScope = CompositionRootServer.createScope();
+const sharedScope = CompositionRootShared.createScope();
+
+const traceClipAPI = sharedScope.resolve(SharedRegistry.Singletons.API.TraceClipAPI);
 const gameEffectsAPI = ServerScope.resolve(ServerRegistry.Singletons.API.GameEffectsAPI);
 
 import type {

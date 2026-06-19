@@ -81,13 +81,15 @@ export class HitboxService {
 
     public Destroy(id: string) {
         const hb = this.hitboxes.get(id);
+
+        HitboxVisualizer.RemoveVisual(id);
+
         if (!hb) return;
 
         hb.Destroy();
         this.hitboxes.delete(id);
         this.lastCFrame.delete(id);
         this.activeHits.delete(id);
-        HitboxVisualizer.RemoveVisual(id);
     }
 
     // запись истории — используем GetServerTimeNow чтобы время совпадало с клиентом
@@ -263,6 +265,8 @@ export class HitboxService {
         }
 
         if (cfg.debug) {
+            if (!this.hitboxes.has(id)) return;
+
             HitboxVisualizer.CreateVisual(
                 id,
                 sweepCF,

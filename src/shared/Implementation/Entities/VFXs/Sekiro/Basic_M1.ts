@@ -38,7 +38,7 @@ export class Basic_M1 {
         sound.Parent = katana;
         SoundsUtil.PlaySound(sound, true);
 
-        janitor.Add(sound, "Destroy", `Swing_Sound_${currentClick}`);
+        //janitor.Add(sound, "Destroy", `Swing_Sound_${currentClick}`);
     }
 
     private createSwingVFX(
@@ -126,10 +126,10 @@ export class Basic_M1 {
         janitor.Remove(`smooth`);
         janitor.Remove(`wind`);
 
-        janitor.Remove(`Swing_Sound_1`);
-        janitor.Remove(`Swing_Sound_2`);
-        janitor.Remove(`Swing_Sound_3`);
-        janitor.Remove(`Swing_Sound_4`);
+        // janitor.Remove(`Swing_Sound_1`);
+        // janitor.Remove(`Swing_Sound_2`);
+        // janitor.Remove(`Swing_Sound_3`);
+        // janitor.Remove(`Swing_Sound_4`);
 
         let legTrail = janitor.Get(`Leg_Trail`) as BasePart;
         if (legTrail) {
@@ -229,8 +229,12 @@ export class Basic_M1 {
                                 emitter: bloodHit
                                     .FindFirstChild("At")!
                                     .FindFirstChild("BloodyDrop")! as ParticleEmitter,
-                                origin: torso.Position,
-                                lookVector: torso.CFrame.LookVector,
+
+                                origin: torso.Position.add(torso.CFrame.LookVector.mul(1.5)),
+
+                                direction: torso.CFrame.LookVector,
+
+                                spread: 12,
 
                                 delay: 0,
 
@@ -243,12 +247,12 @@ export class Basic_M1 {
 
                                 particleToEmit: groundBleed,
                                 trail: bloodBulletTrail,
-                                directionOffset: new Vector3(
-                                    math.random(1, 3),
-                                    0,
-                                    math.random(1, 3),
-                                ),
 
+                                directionOffset: new Vector3(
+                                    torso.CFrame.LookVector.mul(math.random(0, 2)).X,
+                                    0,
+                                    torso.CFrame.LookVector.mul(math.random(0, 2)).Z,
+                                ),
                                 ignore: [
                                     Workspace.WaitForChild("Map").WaitForChild("Players"),
                                     Workspace.WaitForChild("Map").WaitForChild("NPCs"),
@@ -258,7 +262,7 @@ export class Basic_M1 {
                     });
 
                     janitor.Add(bloodHit, "Destroy", `BloodHit_VFX`);
-                    janitor.Add(hitSound, "Destroy", `Hit_Sound`);
+                    //janitor.Add(hitSound, "Destroy", `Hit_Sound`);
 
                     janitor.Add(
                         task.delay(2, () => {
@@ -283,124 +287,286 @@ export class Basic_M1 {
     public Destroy_Basic_M1(ownerId: string, character: Model, currentClick: number) {
         const entity = this.main.api.entityStorageAPI.AddEntity(ownerId, character);
         const combatAnimator = this.main.GetAnimator(character, ownerId, "CombatAnimator");
-        const isLastAction = entity.miscData.get("LastAction") as boolean;
+        // const isLastAction = entity.miscData.get("LastAction") as boolean;
         const prefix = `${ownerId}_M1_${currentClick}`;
 
-        this.main.LastActionUpdate(ownerId, character, isLastAction ?? true);
+        //this.main.LastActionUpdate(ownerId, character, isLastAction ?? true);
 
         combatAnimator.StopAnimation(`M1`, 0, true, true);
         this.destroySwingVFX(ownerId, currentClick);
     }
 
-    public Basic_M1_Var2(
-        ownerId: string,
-        character: Model,
-        currentClick: number,
-        serverTime: number,
-        ownerPing: number,
-    ) {
-        let janitor = this.main.GetJanitor(ownerId);
+    // public Basic_M1_Var2(
+    //     ownerId: string,
+    //     character: Model,
+    //     currentClick: number,
+    //     serverTime: number,
+    //     ownerPing: number,
+    // ) {
+    //     let janitor = this.main.GetJanitor(ownerId);
 
-        const entity = this.main.api.entityStorageAPI.AddEntity(ownerId, character);
-        const apperancy = character.WaitForChild("Apperancy") as IApperancy;
-        const katana = apperancy.Weapon.Models.WaitForChild("Katana") as MeshPart;
+    //     const entity = this.main.api.entityStorageAPI.AddEntity(ownerId, character);
+    //     const apperancy = character.WaitForChild("Apperancy") as IApperancy;
+    //     const katana = apperancy.Weapon.Models.WaitForChild("Katana") as MeshPart;
 
-        const offsetTime = Workspace.GetServerTimeNow() - serverTime;
-        const isLastAction = entity.miscData.get("LastAction") as boolean;
+    //     const offsetTime = Workspace.GetServerTimeNow() - serverTime;
+    //     const isLastAction = entity.miscData.get("LastAction") as boolean;
 
-        this.main.LastActionUpdate(ownerId, character);
+    //     //this.main.LastActionUpdate(ownerId, character);
 
-        const timingPackName = isLastAction ? "Equipped" : "Unequipped";
-        const timing =
-            Sekiro_Basic_M1_Timings[timingPackName as keyof typeof Sekiro_Basic_M1_Timings][
-                `M1_${currentClick}` as keyof typeof Sekiro_Basic_M1_Timings.Unequipped
-            ];
+    //     const timingPackName = isLastAction ? "Equipped" : "Unequipped";
+    //     const timing =
+    //         Sekiro_Basic_M1_Timings[timingPackName as keyof typeof Sekiro_Basic_M1_Timings][
+    //             `M1_${currentClick}` as keyof typeof Sekiro_Basic_M1_Timings.Unequipped
+    //         ];
 
-        const animator = this.main.GetAnimator(character, ownerId, "CombatAnimator");
-        const animToPlay = SekiroAnimations.Combat.FindFirstChild("Sheath_M1")!.FindFirstChild(
-            `M1_${currentClick}`,
-        ) as Animation;
+    //     const animator = this.main.GetAnimator(character, ownerId, "CombatAnimator");
+    //     const animToPlay = SekiroAnimations.Combat.FindFirstChild("Sheath_M1")!.FindFirstChild(
+    //         `M1_${currentClick}`,
+    //     ) as Animation;
 
-        let animation: AnimationTrack | undefined;
+    //     let animation: AnimationTrack | undefined;
 
-        if (character.HasTag("NPC") || this.main.IsLocalCharacter(character)) {
-            if (this.main.IsLocalCharacter(character)) {
-                this.main.api.eventBusAPI
-                    .New(ownerId, "Player")
-                    .Fire(
-                        "ChangeAnimationsPack",
-                        undefined,
-                        true,
-                        character,
-                        `shared.Assets.Animations.Sekiro.Movement.Unsheath`,
-                    );
-            }
+    //     if (character.HasTag("NPC") || this.main.IsLocalCharacter(character)) {
+    //         if (this.main.IsLocalCharacter(character)) {
+    //             this.main.api.eventBusAPI
+    //                 .New(ownerId, "Player")
+    //                 .Fire(
+    //                     "ChangeAnimationsPack",
+    //                     undefined,
+    //                     true,
+    //                     character,
+    //                     `shared.Assets.Animations.Sekiro.Movement.Unsheath`,
+    //                 );
+    //         }
 
-            this.main.StopKatanaSheathAnim(ownerId, character, true);
+    //         this.main.StopKatanaSheathAnim(ownerId, character, true);
 
-            animation = animator.PlayAnimation(
-                animToPlay,
-                `M1_${currentClick}`,
-                false,
-                AnimationsPriorities.CombatAnimation,
-                false,
-                0.15,
-            );
-        } else {
-            while (!animation) {
-                for (const track of animator.animator.GetPlayingAnimationTracks()) {
-                    if (track.Animation?.AnimationId === animToPlay.AnimationId) {
-                        animation = track;
-                        animation.TimePosition = math.clamp(offsetTime, 0, animation.Length);
-                    }
-                }
-                task.wait();
-            }
-        }
+    //         animation = animator.PlayAnimation(
+    //             animToPlay,
+    //             `M1_${currentClick}`,
+    //             false,
+    //             AnimationsPriorities.CombatAnimation,
+    //             false,
+    //             0.15,
+    //         );
+    //     } else {
+    //         while (!animation) {
+    //             for (const track of animator.animator.GetPlayingAnimationTracks()) {
+    //                 if (track.Animation?.AnimationId === animToPlay.AnimationId) {
+    //                     animation = track;
+    //                     animation.TimePosition = math.clamp(offsetTime, 0, animation.Length);
+    //                 }
+    //             }
+    //             task.wait();
+    //         }
+    //     }
 
-        while (animation.Length <= 0) task.wait();
+    //     while (animation.Length <= 0) task.wait();
 
-        janitor.Remove(`animation_Check`);
+    //     janitor.Remove(`animation_Check`);
 
-        if (offsetTime >= timing.events.swingreg) {
-            this.createSwingVFX(character, katana, currentClick, ownerId);
-        } else {
-            animation.GetMarkerReachedSignal("swingreg").Once(() => {
-                this.createSwingVFX(character, katana, currentClick, ownerId);
-            });
-        }
+    //     if (offsetTime >= timing.events.swingreg) {
+    //         this.createSwingVFX(character, katana, currentClick, ownerId);
+    //     } else {
+    //         animation.GetMarkerReachedSignal("swingreg").Once(() => {
+    //             this.createSwingVFX(character, katana, currentClick, ownerId);
+    //         });
+    //     }
 
-        if (offsetTime >= timing.events.swingend) {
-            this.removeSwingVFX(ownerId);
-        } else {
-            animation.GetMarkerReachedSignal("swingend").Once(() => {
-                this.removeSwingVFX(ownerId);
-            });
-        }
+    //     if (offsetTime >= timing.events.swingend) {
+    //         this.removeSwingVFX(ownerId);
+    //     } else {
+    //         animation.GetMarkerReachedSignal("swingend").Once(() => {
+    //             this.removeSwingVFX(ownerId);
+    //         });
+    //     }
 
-        if (offsetTime >= 0.333) {
-            this.main.Equip(ownerId, character);
-        } else {
-            animation.GetMarkerReachedSignal("unsheath").Once(() => {
-                this.main.Equip(ownerId, character);
-            });
-        }
+    //     if (offsetTime >= 0.333) {
+    //         this.main.Equip(ownerId, character, true);
+    //     } else {
+    //         animation.GetMarkerReachedSignal("unsheath").Once(() => {
+    //             this.main.Equip(ownerId, character, true);
+    //         });
+    //     }
 
-        animation.GetMarkerReachedSignal("sheath").Once(() => {
-            this.main.FastUnequip(ownerId, character);
-        });
+    //     animation.GetMarkerReachedSignal("sheath").Once(() => {
+    //         this.main.FastUnequip(ownerId, character);
+    //     });
 
-        task.delay(timing.duration - offsetTime, () => {
-            janitor.Remove(`animation_Check`);
-        });
-    }
+    //     task.delay(timing.duration - offsetTime, () => {
+    //         janitor.Remove(`animation_Check`);
+    //     });
+    // }
+
+    // public Basic_M1_CLIENT(
+    //     ownerId: string,
+    //     character: Model,
+    //     currentClick: number,
+    //     serverTime: number,
+    //     ownerPing: number,
+    // ) {
+    //     let janitor = this.main.GetJanitor(ownerId);
+
+    //     const entity = this.main.api.entityStorageAPI.AddEntity(ownerId, character);
+    //     const apperancy = character.WaitForChild("Apperancy") as IApperancy;
+    //     const katana = apperancy.Weapon.Models.WaitForChild("Katana") as MeshPart;
+
+    //     const offsetTime = Workspace.GetServerTimeNow() - serverTime;
+    //     const isLastAction = entity.miscData.get("LastAction") as boolean;
+
+    //     //this.main.LastActionUpdate(ownerId, character, isLastAction || true, true);
+
+    //     const timingPackName = isLastAction ? "Equipped" : "Unequipped";
+    //     const timing =
+    //         Sekiro_Basic_M1_Timings[timingPackName as keyof typeof Sekiro_Basic_M1_Timings][
+    //             `M1_${currentClick}` as keyof typeof Sekiro_Basic_M1_Timings.Unequipped
+    //         ];
+
+    //     const animator = this.main.GetAnimator(character, ownerId, "CombatAnimator");
+    //     const animToPlay = SekiroAnimations.Combat.FindFirstChild(
+    //         isLastAction ? "Unsheath_M1" : "Sheath_M1",
+    //     )!.FindFirstChild(`M1_${currentClick}`) as Animation;
+
+    //     let animation: AnimationTrack | undefined;
+
+    //     if (character.HasTag("NPC") || this.main.IsLocalCharacter(character)) {
+    //         if (this.main.IsLocalCharacter(character)) {
+    //             this.main.api.eventBusAPI
+    //                 .New(ownerId, "Player")
+    //                 .Fire(
+    //                     "ChangeAnimationsPack",
+    //                     undefined,
+    //                     true,
+    //                     character,
+    //                     `shared.Assets.Animations.Sekiro.Movement.Unsheath`,
+    //                 );
+    //         }
+
+    //         this.main.StopKatanaSheathAnim(ownerId, character, true);
+
+    //         animation = animator.PlayAnimation(
+    //             animToPlay,
+    //             `M1_${currentClick}`,
+    //             false,
+    //             AnimationsPriorities.CombatAnimation,
+    //             false,
+    //             0.25,
+    //         );
+    //     } else {
+    //         while (!animation) {
+    //             for (const track of animator.animator.GetPlayingAnimationTracks()) {
+    //                 if (track.Animation?.AnimationId === animToPlay.AnimationId) {
+    //                     animation = track;
+    //                     animation.TimePosition = math.clamp(offsetTime, 0, animation.Length);
+    //                 }
+    //             }
+    //             task.wait();
+    //         }
+    //     }
+
+    //     while (animation.Length <= 0) task.wait();
+
+    //     janitor.Remove(`animation_Check`);
+
+    //     if (offsetTime >= timing.events.swingsound) {
+    //         this.createSwingSoundVFX(ownerId, katana, currentClick);
+    //     } else {
+    //         animation.GetMarkerReachedSignal("swingsound").Once(() => {
+    //             this.createSwingSoundVFX(ownerId, katana, currentClick);
+    //         });
+    //     }
+
+    //     if (offsetTime >= timing.events.swingreg) {
+    //         this.createSwingVFX(character, katana, currentClick, ownerId);
+    //     } else {
+    //         animation.GetMarkerReachedSignal("swingreg").Once(() => {
+    //             this.createSwingVFX(character, katana, currentClick, ownerId);
+    //         });
+    //     }
+
+    //     if (offsetTime >= timing.events.swingend) {
+    //         this.removeSwingVFX(ownerId);
+    //     } else {
+    //         animation.GetMarkerReachedSignal("swingend").Once(() => {
+    //             this.removeSwingVFX(ownerId);
+    //         });
+    //     }
+
+    //     if (offsetTime >= 0.333) {
+    //         this.main.Equip(ownerId, character, true);
+    //     } else {
+    //         animation.GetMarkerReachedSignal("unsheath").Once(() => {
+    //             this.main.Equip(ownerId, character, true);
+    //         });
+    //     }
+
+    //     animation.GetMarkerReachedSignal("sheath").Once(() => {
+    //         this.main.FastUnequip(ownerId, character);
+    //     });
+
+    //     // if (animation.Name === "M1_4") {
+    //     //     this.main.LastActionUpdate(ownerId, character, true, true);
+    //     // }
+
+    //     task.delay(timing.duration - offsetTime, () => {
+    //         janitor.Remove(`animation_Check`);
+    //     });
+    // }
+
+    // public Basic_M1_Server(
+    //     ownerId: string,
+    //     character: Model,
+    //     currentClick: number,
+    //     serverTime: number,
+    //     ownerPing: number,
+    // ) {
+    //     let janitor = this.main.GetJanitor(ownerId);
+
+    //     const entity = this.main.api.entityStorageAPI.AddEntity(ownerId, character);
+    //     const apperancy = character.WaitForChild("Apperancy") as IApperancy;
+    //     const katana = apperancy.Weapon.Models.WaitForChild("Katana") as MeshPart;
+
+    //     const offsetTime = Workspace.GetServerTimeNow() - serverTime;
+    //     const isLastAction = entity.miscData.get("LastAction") as boolean;
+
+    //     //this.main.LastActionUpdate(ownerId, character, isLastAction || true, true);
+
+    //     const timingPackName = isLastAction ? "Equipped" : "Unequipped";
+    //     const timing =
+    //         Sekiro_Basic_M1_Timings[timingPackName as keyof typeof Sekiro_Basic_M1_Timings][
+    //             `M1_${currentClick}` as keyof typeof Sekiro_Basic_M1_Timings.Unequipped
+    //         ];
+
+    //     const animator = this.main.GetAnimator(character, ownerId, "CombatAnimator");
+
+    //     janitor.Remove(`animation_Check`);
+
+    //     this.main.Equip(ownerId, character, true);
+
+    //     task.delay(timing.events.swingsound - offsetTime, () => {
+    //         this.createSwingSoundVFX(ownerId, katana, currentClick);
+    //     });
+
+    //     task.delay(timing.events.swingreg - offsetTime, () => {
+    //         this.createSwingVFX(character, katana, currentClick, ownerId);
+    //     });
+
+    //     task.delay(timing.events.swingend - offsetTime, () => {
+    //         this.createSwingVFX(character, katana, currentClick, ownerId);
+    //     });
+
+    //     task.delay(timing.duration - offsetTime, () => {
+    //         janitor.Remove(`animation_Check`);
+    //     });
+    // }
 
     public Basic_M1(
         ownerId: string,
         character: Model,
         currentClick: number,
+        animationToPlay: Animation,
         serverTime: number,
-        ownerPing: number,
     ) {
         let janitor = this.main.GetJanitor(ownerId);
 
@@ -409,61 +575,36 @@ export class Basic_M1 {
         const katana = apperancy.Weapon.Models.WaitForChild("Katana") as MeshPart;
 
         const offsetTime = Workspace.GetServerTimeNow() - serverTime;
-        const isLastAction = entity.miscData.get("LastAction") as boolean;
 
-        this.main.LastActionUpdate(ownerId, character, isLastAction || true, true);
+        let equippedWeapon = (character.GetAttribute(`EquippedWeapon`) as boolean) || false;
 
-        const timingPackName = isLastAction ? "Equipped" : "Unequipped";
+        const timingPackName = equippedWeapon ? "Equipped" : "Unequipped";
         const timing =
             Sekiro_Basic_M1_Timings[timingPackName as keyof typeof Sekiro_Basic_M1_Timings][
                 `M1_${currentClick}` as keyof typeof Sekiro_Basic_M1_Timings.Unequipped
             ];
 
         const animator = this.main.GetAnimator(character, ownerId, "CombatAnimator");
-        const animToPlay = SekiroAnimations.Combat.FindFirstChild(
-            isLastAction ? "Unsheath_M1" : "Sheath_M1",
-        )!.FindFirstChild(`M1_${currentClick}`) as Animation;
 
-        let animation: AnimationTrack | undefined;
+        janitor.Remove(`animation_Check`);
 
-        if (character.HasTag("NPC") || this.main.IsLocalCharacter(character)) {
-            if (this.main.IsLocalCharacter(character)) {
-                this.main.api.eventBusAPI
-                    .New(ownerId, "Player")
-                    .Fire(
-                        "ChangeAnimationsPack",
-                        undefined,
-                        true,
-                        character,
-                        `shared.Assets.Animations.Sekiro.Movement.Unsheath`,
-                    );
-            }
+        let animation = undefined as AnimationTrack | undefined;
 
-            this.main.StopKatanaSheathAnim(ownerId, character, true);
+        this.main.InterruptUnequip(ownerId, character);
 
-            animation = animator.PlayAnimation(
-                animToPlay,
-                `M1_${currentClick}`,
-                false,
-                AnimationsPriorities.CombatAnimation,
-                false,
-                0.15,
-            );
-        } else {
-            while (!animation) {
-                for (const track of animator.animator.GetPlayingAnimationTracks()) {
-                    if (track.Animation?.AnimationId === animToPlay.AnimationId) {
-                        animation = track;
-                        animation.TimePosition = math.clamp(offsetTime, 0, animation.Length);
-                    }
-                }
-                task.wait();
+        if (currentClick !== 1) {
+            this.main.Equip(ownerId, character, true);
+        }
+
+        for (const track of animator.animator.GetPlayingAnimationTracks()) {
+            if (!track.Animation || !animationToPlay) continue;
+
+            if (track.Animation.AnimationId === animationToPlay.AnimationId) {
+                animation = track;
             }
         }
 
-        while (animation.Length <= 0) task.wait();
-
-        janitor.Remove(`animation_Check`);
+        if (!animation) return;
 
         if (offsetTime >= timing.events.swingsound) {
             this.createSwingSoundVFX(ownerId, katana, currentClick);
@@ -490,10 +631,10 @@ export class Basic_M1 {
         }
 
         if (offsetTime >= 0.333) {
-            this.main.Equip(ownerId, character);
+            this.main.Equip(ownerId, character, true);
         } else {
             animation.GetMarkerReachedSignal("unsheath").Once(() => {
-                this.main.Equip(ownerId, character);
+                this.main.Equip(ownerId, character, true);
             });
         }
 
@@ -501,9 +642,9 @@ export class Basic_M1 {
             this.main.FastUnequip(ownerId, character);
         });
 
-        if (animation.Name === "M1_4") {
-            this.main.LastActionUpdate(ownerId, character, true, true);
-        }
+        // if (animation.Name === "M1_4") {
+        //     this.main.LastActionUpdate(ownerId, character, true, true);
+        // }
 
         task.delay(timing.duration - offsetTime, () => {
             janitor.Remove(`animation_Check`);
@@ -520,11 +661,11 @@ export class Basic_M1 {
 
         const offsetTime = Workspace.GetServerTimeNow() - serverTime;
 
-        let lastAction = (entity.miscData.get("LastAction") as boolean) ?? false;
+        // let lastAction = (entity.miscData.get("LastAction") as boolean) ?? false;
 
-        if (janitor.Get("LastActionCheck")) {
-            this.main.LastActionUpdate(ownerId, character, lastAction, true);
-        }
+        // if (janitor.Get("LastActionCheck")) {
+        //     this.main.LastActionUpdate(ownerId, character, lastAction, true);
+        // }
 
         if (!this.main.Debris.has(`${ownerId}_Hit`)) {
             this.main.Debris.set(`${ownerId}_Hit`, 1);
@@ -546,8 +687,6 @@ export class Basic_M1 {
             0,
         );
 
-        this.createHitVFX(ownerId, character, currentClick, hitTime);
-
         if (!this.main.IsLocalCharacter(character)) {
             janitor.Add(
                 combatAnimator.animator.AnimationPlayed.Connect(
@@ -562,6 +701,8 @@ export class Basic_M1 {
                 `Stop_Hit_Animation`,
             );
         }
+
+        this.createHitVFX(ownerId, character, currentClick, hitTime);
 
         if (hitTime >= 3) {
             this.main.Debris.set(`${ownerId}_Hit`, 1);

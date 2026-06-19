@@ -16,10 +16,10 @@ export class Blocking_Dummy {
         let statusEffectsAPI = serverScope.resolve(ServerRegistry.Singletons.API.StatusEffectsAPI);
 
         statusEffectsAPI.InitActor("Blocking_Dummy");
+        InitSolvers("Blocking_Dummy");
 
         new Server_CharacterHandler(npc, "Blocking_Dummy", "Sekiro");
 
-        InitSolvers("Blocking_Dummy");
         let Pack = CreatePack("Sekiro", "Blocking_Dummy");
         let Block = Pack["Block"];
         abilityAPI.Execute(Block.ability!, "Start", true);

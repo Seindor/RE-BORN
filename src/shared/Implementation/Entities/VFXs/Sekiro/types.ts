@@ -8,14 +8,52 @@ export type ISekiroVFXs = {
     } & Folder;
 } & Folder;
 
+export type ISekiroModels = {
+	["Models"]: {
+		["Katana"]: {
+			["SurfaceAppearance"]: SurfaceAppearance;
+		} & MeshPart;
+		["MortalBlade"]: {
+			["SurfaceAppearance"]: SurfaceAppearance;
+		} & MeshPart;
+		["MortalSheath"]: {
+			["SurfaceAppearance"]: SurfaceAppearance;
+		} & MeshPart;
+		["Prosthesis"]: {
+			["LeftCharArm"]: {
+				["Body"]: {
+					["WeldConstraint"]: WeldConstraint;
+				} & MeshPart;
+				["WeldConstraint"]: WeldConstraint;
+			} & MeshPart;
+			["SurfaceAppearance"]: SurfaceAppearance;
+		} & MeshPart;
+		["Sheath"]: {
+			["SurfaceAppearance"]: SurfaceAppearance;
+		} & MeshPart;
+	} & Folder;
+	["Welds"]: {
+		["Left Arm_Prothesis_Weld"]: Weld;
+		["MortalSheath_MortalBlade_Weld"]: Weld;
+		["RH_Katana_Weld"]: Weld;
+		["RH_MortalBlade_Weld"]: Weld;
+		["Sheath_Katana_Weld"]: Weld;
+		["Torso_MortalSheath_Weld"]: Weld;
+		["Torso_Sheath_Weld"]: Weld;
+	} & Folder;
+} & Folder;
+
 export type ISekiroAnimations = {
     ["Combat"]: {
         ["Hits"]: {
             ["Block_Hit_1"]: Animation;
             ["Block_Hit_2"]: Animation;
+            ["Block_Hit_3"]: Animation;
             ["Hit_1"]: Animation;
             ["Hit_2"]: Animation;
             ["Hit_3"]: Animation;
+            ["Parried_1"]: Animation;
+            ["Parried_2"]: Animation;
         } & Folder;
         ["Sheath_M1"]: {
             ["M1_1"]: Animation;
@@ -49,6 +87,8 @@ export type ISekiroAnimations = {
         } & Folder;
     } & Folder;
     ["Defense"]: {
+        ["Block_Break"]: Animation;
+        ["Block_Break_Idle"]: Animation;
         ["Block_Idle"]: Animation;
         ["Parry_1"]: Animation;
         ["Parry_2"]: Animation;

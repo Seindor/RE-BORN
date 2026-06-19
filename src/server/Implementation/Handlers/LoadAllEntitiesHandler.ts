@@ -50,8 +50,8 @@ export class LoadAllEntitiesHandler {
 
                         task.wait(0.5);
 
-                        if (entity.miscData.has("LastLaunchedVFX")) {
-                            const raw = entity.miscData.get("LastLaunchedVFX");
+                        if (entity.HasState("LastLaunchedVFX")) {
+                            const raw = entity.GetState("LastLaunchedVFX");
 
                             if (typeIs(raw, "table")) {
                                 const args = raw as unknown[];
@@ -69,7 +69,7 @@ export class LoadAllEntitiesHandler {
                 });
             } else {
                 let character = entity.entity as Model;
-                let characterName = entity.miscData.get("CharacterName") as string;
+                let characterName = entity.GetState("CharacterName") as string;
 
                 if (!character) continue;
                 if (!characterName) continue;
@@ -91,8 +91,8 @@ export class LoadAllEntitiesHandler {
 
                     task.wait(0.5);
 
-                    if (entity.miscData.has("LastLaunchedVFX")) {
-                        const raw = entity.miscData.get("LastLaunchedVFX");
+                    if (entity.HasState("LastLaunchedVFX")) {
+                        const raw = entity.GetState("LastLaunchedVFX");
 
                         if (typeIs(raw, "table")) {
                             const args = raw as unknown[];

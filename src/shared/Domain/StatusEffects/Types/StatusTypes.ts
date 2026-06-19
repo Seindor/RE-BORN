@@ -33,6 +33,7 @@ export interface Modifier {
 
 export interface StatusDefinition {
     id: IStatusId;
+    duration?: number;
 
     stackingPolicy: IStatusStackingPolicy;
 
@@ -71,7 +72,7 @@ export interface StatusAggregateType {
     blacklist?: BlacklistedStatus[];
     ignoreList?: BlacklistedStatus[];
 
-    _janitor: Janitor;
+    _janitor: Janitor<any>;
 
     onApply?: (actorId: string, statusAggregate?: StatusAggregate) => void;
     onAdded?: (actorId: string, statusAggregate?: StatusAggregate) => void;
@@ -82,6 +83,7 @@ export interface StatusAggregateType {
 export interface StatusAggregateOptions {
     priority?: number;
     duration?: number;
+    tags?: string[];
 
     stacks?: number;
     maxStacks?: number;

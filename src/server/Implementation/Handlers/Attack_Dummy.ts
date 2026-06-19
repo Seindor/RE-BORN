@@ -15,12 +15,12 @@ export class Attack_Dummy {
         let abilityAPI = sharedScope.resolve(SharedRegistry.Singletons.API.AbilityAPI);
         let statusEffectsAPI = serverScope.resolve(ServerRegistry.Singletons.API.StatusEffectsAPI);
 
-        statusEffectsAPI.InitActor("Attack_Dummy");
+        statusEffectsAPI.InitActor(npc.Name);
+        InitSolvers(npc.Name);
 
-        new Server_CharacterHandler(npc, "Attack_Dummy", "Sekiro");
+        new Server_CharacterHandler(npc, npc.Name, "Sekiro");
 
-        InitSolvers("Attack_Dummy");
-        let Pack = CreatePack("Sekiro", "Attack_Dummy");
+        let Pack = CreatePack("Sekiro", npc.Name);
         let M1 = Pack["M1"];
 
         task.spawn(() => {

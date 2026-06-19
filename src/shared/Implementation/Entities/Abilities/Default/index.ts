@@ -7,6 +7,7 @@ export const DefaultPack = {
     abilities: {
         ["Run"]: {
             key: "Run",
+            priority: 1,
             abilityName: "Default_Run",
             activatingType: "Manual",
             type: "Hold",
@@ -14,6 +15,7 @@ export const DefaultPack = {
         },
         ["Dash"]: {
             key: "Dash",
+            priority: 1,
             abilityName: "Default_Dash",
             activatingType: "Manual",
             type: "Switch",

@@ -1,7 +1,5 @@
 import { SharedRegistry } from "shared/DI/Generated/SharedRegistry";
 import { CompositionRootShared } from "shared/DI/CompositionRootShared";
-import { SoundsUtil } from "shared/Utilities/SoundsUtil";
-
 const SharedScope = CompositionRootShared.createScope();
 
 const SolverAPI = SharedScope.resolve(SharedRegistry.Singletons.API.SolverAPI);

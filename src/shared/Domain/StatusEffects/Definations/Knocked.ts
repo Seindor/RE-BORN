@@ -2,6 +2,7 @@ import { StatusDefinition } from "../Types/StatusTypes";
 
 export const Knocked: StatusDefinition = {
     id: "Knocked",
+    duration: math.huge,
 
     stackingPolicy: "Replace",
 

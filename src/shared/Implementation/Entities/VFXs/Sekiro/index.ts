@@ -5,7 +5,7 @@ import { Janitor } from "@rbxts/janitor";
 import { IApperancy } from "shared/Types/Gameplay/PlayerApperance";
 import { IModels } from "shared/Types/Assets/Models";
 import { IAnimations } from "shared/Types/Assets/Animations";
-import { ISekiroAnimations, ISekiroVFXs } from "./types";
+import { ISekiroAnimations, ISekiroModels, ISekiroVFXs } from "./types";
 
 import { SoundsUtil } from "shared/Utilities/SoundsUtil";
 import { AnimationsPriorities } from "shared/Types/Gameplay/AnimationTypes";
@@ -14,9 +14,11 @@ import { ClientAtomReplication } from "shared/Application/ClientAtomReplication"
 
 import { Basic_M1 } from "./Basic_M1";
 import { Basic_Block } from "./Basic_Block";
+import { Basic_Parry } from "./Basic_Parry";
 
 import { SharedRegistry } from "shared/DI/Generated/SharedRegistry";
 import { CompositionRootShared } from "shared/DI/CompositionRootShared";
+import { VFXModules } from "..";
 
 const sharedScope = CompositionRootShared.createScope();
 
@@ -25,6 +27,7 @@ const Models = Assets.WaitForChild("Models") as IModels;
 const Animations = Assets.WaitForChild("Animations") as IAnimations;
 const VFXs = Assets.WaitForChild("VFXs") as Folder;
 
+const SekiroModels = Models.Sekiro as ISekiroModels;
 const SekiroAnimations = Animations.WaitForChild("Sekiro") as ISekiroAnimations;
 const SekiroVFXs = VFXs.WaitForChild("Sekiro") as ISekiroVFXs;
 
@@ -46,6 +49,8 @@ export class Sekiro implements OnStart {
     public vfxModules = {
         basic_M1: new Basic_M1(this),
         basic_Block: new Basic_Block(this),
+        basic_Parry: new Basic_Parry(this),
+        default: VFXModules.Default(),
     };
 
     onStart(): void {
@@ -106,31 +111,59 @@ export class Sekiro implements OnStart {
         return {
             sheath: this.getOrCreateDebris(
                 `${ownerId}_Sheath`,
-                () => Models.Sekiro.Models.Sheath.Clone() as MeshPart,
+                () => SekiroModels.Models.Sheath.Clone() as MeshPart,
             ),
             katana: this.getOrCreateDebris(
                 `${ownerId}_Katana`,
-                () => Models.Sekiro.Models.Katana.Clone() as MeshPart,
+                () => SekiroModels.Models.Katana.Clone() as MeshPart,
             ),
+
+            mortalsheath: this.getOrCreateDebris(
+                `${ownerId}_MortalSheath`,
+                () => SekiroModels.Models.MortalSheath.Clone() as MeshPart,
+            ),
+
+            mortalBlade: this.getOrCreateDebris(
+                `${ownerId}_MortalBlade`,
+                () => SekiroModels.Models.MortalBlade.Clone() as MeshPart,
+            ),
+
             prothesis: this.getOrCreateDebris(
                 `${ownerId}_Prothesis`,
-                () => Models.Sekiro.Models.Prosthesis.Clone() as MeshPart,
+                () => SekiroModels.Models.Prosthesis.Clone() as MeshPart,
             ),
-            rhWeld: this.getOrCreateDebris(
+            RH_Katana_Weld: this.getOrCreateDebris(
                 `${ownerId}_RH_Katana_Weld`,
-                () => Models.Sekiro.Welds["RH_Katana_Weld"].Clone() as Weld,
+                () => SekiroModels.Welds["RH_Katana_Weld"].Clone() as Weld,
             ),
-            sheathWeld: this.getOrCreateDebris(
+
+            Sheath_Katana_Weld: this.getOrCreateDebris(
                 `${ownerId}_Sheath_Katana_Weld`,
-                () => Models.Sekiro.Welds.Sheath_Katana_Weld.Clone() as Weld,
+                () => SekiroModels.Welds.Sheath_Katana_Weld.Clone() as Weld,
             ),
-            torsoWeld: this.getOrCreateDebris(
+            Torso_Sheath_Weld: this.getOrCreateDebris(
                 `${ownerId}_Torso_Sheath_Weld`,
-                () => Models.Sekiro.Welds.Torso_Sheath_Weld.Clone() as Weld,
+                () => SekiroModels.Welds.Torso_Sheath_Weld.Clone() as Weld,
             ),
-            leftArmWeld: this.getOrCreateDebris(
+
+            RH_MortalBlade_Weld: this.getOrCreateDebris(
+                `${ownerId}_RH_MortalBlade_Weld`,
+                () => SekiroModels.Welds["RH_MortalBlade_Weld"].Clone() as Weld,
+            ),
+
+            MortalSheath_MortalBlade_Weld: this.getOrCreateDebris(
+                `${ownerId}_MortalSheath_MortalBlade_Weld`,
+                () => SekiroModels.Welds.MortalSheath_MortalBlade_Weld.Clone() as Weld,
+            ),
+
+            Torso_MortalSheath_Weld: this.getOrCreateDebris(
+                `${ownerId}_Torso_MortalSheath_Weld`,
+                () => SekiroModels.Welds.Torso_MortalSheath_Weld.Clone() as Weld,
+            ),
+
+            Left_Arm_Prothesis_Weld: this.getOrCreateDebris(
                 `${ownerId}_Left_Arm_Prothesis_Weld`,
-                () => Models.Sekiro.Welds["Left Arm_Prothesis_Weld"].Clone() as Weld,
+                () => SekiroModels.Welds["Left Arm_Prothesis_Weld"].Clone() as Weld,
             ),
         };
     }
@@ -246,8 +279,18 @@ export class Sekiro implements OnStart {
         const apperancy = character.WaitForChild("Apperancy") as IApperancy;
         const playerBus = this.api.eventBusAPI.New(ownerId, "Player");
 
-        const { sheath, katana, prothesis, rhWeld, sheathWeld, torsoWeld, leftArmWeld } =
-            this.createAssets(ownerId);
+        const {
+            sheath,
+            katana,
+            mortalsheath,
+            mortalBlade,
+            prothesis,
+            Sheath_Katana_Weld,
+            Torso_Sheath_Weld,
+            MortalSheath_MortalBlade_Weld,
+            Torso_MortalSheath_Weld,
+            Left_Arm_Prothesis_Weld,
+        } = this.createAssets(ownerId);
 
         const leftArm = character.WaitForChild("Left Arm") as MeshPart;
         const leftCharArm = prothesis.WaitForChild("LeftCharArm") as MeshPart;
@@ -261,27 +304,43 @@ export class Sekiro implements OnStart {
             "shared.Assets.Animations.Sekiro.Movement.Sheath",
         );
 
-        rhWeld.Destroy();
+        janitor.Add(
+            task.spawn(() => {
+                Torso_Sheath_Weld.Part0 = torso;
+                Torso_Sheath_Weld.Part1 = sheath;
+                Torso_Sheath_Weld.Enabled = true;
 
-        torsoWeld.Part0 = torso;
-        torsoWeld.Part1 = sheath;
-        torsoWeld.Enabled = true;
+                Sheath_Katana_Weld.Part0 = sheath;
+                Sheath_Katana_Weld.Part1 = katana;
+                Sheath_Katana_Weld.Enabled = true;
 
-        leftArmWeld.Part0 = leftArm;
-        leftArmWeld.Part1 = prothesis;
-        leftArmWeld.Enabled = true;
+                Torso_MortalSheath_Weld.Part0 = torso;
+                Torso_MortalSheath_Weld.Part1 = mortalsheath;
+                Torso_MortalSheath_Weld.Enabled = true;
 
-        sheathWeld.Part0 = sheath;
-        sheathWeld.Part1 = katana;
-        sheathWeld.Enabled = true;
+                MortalSheath_MortalBlade_Weld.Part0 = mortalsheath;
+                MortalSheath_MortalBlade_Weld.Part1 = mortalBlade;
+                MortalSheath_MortalBlade_Weld.Enabled = true;
 
-        torsoWeld.Parent = apperancy.Weapon.Welds;
-        leftArmWeld.Parent = apperancy.Weapon.Welds;
-        sheathWeld.Parent = apperancy.Weapon.Welds;
+                Left_Arm_Prothesis_Weld.Part0 = leftArm;
+                Left_Arm_Prothesis_Weld.Part1 = prothesis;
+                Left_Arm_Prothesis_Weld.Enabled = true;
 
-        sheath.Parent = apperancy.Weapon.Models;
-        katana.Parent = apperancy.Weapon.Models;
-        prothesis.Parent = apperancy.Weapon.Models;
+                Torso_Sheath_Weld.Parent = apperancy.Weapon.Welds;
+                Sheath_Katana_Weld.Parent = apperancy.Weapon.Welds;
+                Torso_MortalSheath_Weld.Parent = apperancy.Weapon.Welds;
+                MortalSheath_MortalBlade_Weld.Parent = apperancy.Weapon.Welds;
+                Left_Arm_Prothesis_Weld.Parent = apperancy.Weapon.Welds;
+
+                sheath.Parent = apperancy.Weapon.Models;
+                katana.Parent = apperancy.Weapon.Models;
+                mortalsheath.Parent = apperancy.Weapon.Models;
+                mortalBlade.Parent = apperancy.Weapon.Models;
+                prothesis.Parent = apperancy.Weapon.Models;
+            }),
+            true,
+            `Spawn_Welds_Setup`,
+        );
 
         leftArm.Transparency = 1;
 
@@ -293,7 +352,6 @@ export class Sekiro implements OnStart {
                     const shirt = character.FindFirstChildWhichIsA("Shirt");
                     (leftCharArm.WaitForChild("Body") as MeshPart).Color = leftArm.Color;
                     if (shirt) {
-                        print("FOUND");
                         leftCharArm.TextureID = shirt.ShirtTemplate;
                         leftCharArm.Transparency = 0.02;
                         janitor.Remove(`ShirtCheck`);
@@ -310,36 +368,46 @@ export class Sekiro implements OnStart {
         janitor.Add(character, "Destroy", `Sekiro_Character`);
     }
 
-    public Equip(ownerId: string, character: Model) {
+    public Equip(ownerId: string, character: Model, changeAnimations?: boolean) {
+        let janitor = this.GetJanitor(ownerId);
+
         const apperancy = character.WaitForChild("Apperancy") as IApperancy;
         const playerBus = this.api.eventBusAPI.New(ownerId, "Player");
 
-        const { sheath, katana, rhWeld, torsoWeld } = this.createAssets(ownerId);
+        const { sheath, katana, RH_Katana_Weld, Torso_Sheath_Weld, Sheath_Katana_Weld } =
+            this.createAssets(ownerId);
         const rh = apperancy.Handlers.Parts.WaitForChild("RH") as BasePart;
         const torso = character.FindFirstChild("Torso") as BasePart;
 
-        const sheathWeld = this.Debris.get(`${ownerId}_Sheath_Katana_Weld`) as Weld | undefined;
-        sheathWeld?.Destroy();
+        this.InterruptUnequip(ownerId, character);
 
-        torsoWeld.Part0 = torso;
-        torsoWeld.Part1 = sheath;
-        torsoWeld.Enabled = true;
+        janitor.Remove(`Spawn_Welds_Setup`);
 
-        if (!rhWeld.Enabled) {
-            rhWeld.Part0 = rh;
-            rhWeld.Part1 = katana;
-            rhWeld.Enabled = true;
-            rhWeld.Parent = apperancy.Weapon.Welds;
-        }
+        Torso_Sheath_Weld.Part0 = torso;
+        Torso_Sheath_Weld.Part1 = sheath;
+        Torso_Sheath_Weld.Enabled = true;
 
-        if (this.IsLocalCharacter(character)) {
-            playerBus.Fire(
-                "ChangeAnimationsPack",
-                undefined,
-                true,
-                character,
-                "shared.Assets.Animations.Sekiro.Movement.Unsheath",
-            );
+        Sheath_Katana_Weld.Enabled = false;
+        Sheath_Katana_Weld.Destroy();
+        this.Debris.delete(`${ownerId}_Sheath_Katana_Weld`);
+
+        RH_Katana_Weld.Enabled = false;
+
+        RH_Katana_Weld.Part0 = rh;
+        RH_Katana_Weld.Part1 = katana;
+        RH_Katana_Weld.Enabled = true;
+        RH_Katana_Weld.Parent = apperancy.Weapon.Welds;
+
+        if (changeAnimations === true) {
+            if (this.IsLocalCharacter(character)) {
+                playerBus.Fire(
+                    "ChangeAnimationsPack",
+                    undefined,
+                    true,
+                    character,
+                    "shared.Assets.Animations.Sekiro.Movement.Unsheath",
+                );
+            }
         }
     }
 
@@ -350,20 +418,23 @@ export class Sekiro implements OnStart {
         const torso = character.WaitForChild("Torso") as BasePart;
         const playerBus = this.api.eventBusAPI.New(ownerId, "Player");
 
-        const { sheath, katana, sheathWeld, torsoWeld, rhWeld } = this.createAssets(ownerId);
+        const { sheath, katana, Sheath_Katana_Weld, Torso_Sheath_Weld, RH_Katana_Weld } =
+            this.createAssets(ownerId);
         const emoteAnimator = this.GetAnimator(character, ownerId, "EmoteAnimator");
 
+        if (!RH_Katana_Weld.Enabled) return;
+
         const doUnequipVisual = () => {
-            rhWeld.Destroy();
+            RH_Katana_Weld.Destroy();
 
-            torsoWeld.Part0 = torso;
-            torsoWeld.Part1 = sheath;
-            torsoWeld.Enabled = true;
+            Torso_Sheath_Weld.Part0 = torso;
+            Torso_Sheath_Weld.Part1 = sheath;
+            Torso_Sheath_Weld.Enabled = true;
 
-            sheathWeld.Part0 = sheath;
-            sheathWeld.Part1 = katana;
-            sheathWeld.Enabled = true;
-            sheathWeld.Parent = apperancy.Weapon.Welds;
+            Sheath_Katana_Weld.Part0 = sheath;
+            Sheath_Katana_Weld.Part1 = katana;
+            Sheath_Katana_Weld.Enabled = true;
+            Sheath_Katana_Weld.Parent = apperancy.Weapon.Welds;
         };
 
         let animToPlay = SekiroAnimations.Misc.Katana_Sheathing;
@@ -424,72 +495,83 @@ export class Sekiro implements OnStart {
         );
     }
 
+    public InterruptUnequip(ownerId: string, character: Model) {
+        let janitor = this.GetJanitor(ownerId);
+
+        this.StopKatanaSheathAnim(ownerId, character, true);
+
+        janitor.Remove(`Sekiro_Katana_Sheathing_swingreg`);
+        janitor.Remove(`Sekiro_Katana_Sheathing_swingend`);
+        janitor.Remove(`Sekiro_Katana_Sheathing_sheath`);
+    }
+
     public FastUnequip(ownerId: string, character: Model) {
         const apperancy = character.WaitForChild("Apperancy") as IApperancy;
         const torso = character.WaitForChild("Torso") as BasePart;
         const playerBus = this.api.eventBusAPI.New(ownerId, "Player");
 
-        const { sheath, katana, sheathWeld, torsoWeld, rhWeld } = this.createAssets(ownerId);
+        const { sheath, katana, Sheath_Katana_Weld, Torso_Sheath_Weld, RH_Katana_Weld } =
+            this.createAssets(ownerId);
         const emoteAnimator = this.GetAnimator(character, ownerId, "EmoteAnimator");
 
         const doUnequipVisual = () => {
-            rhWeld.Destroy();
+            RH_Katana_Weld.Destroy();
 
-            torsoWeld.Part0 = torso;
-            torsoWeld.Part1 = sheath;
-            torsoWeld.Enabled = true;
+            Torso_Sheath_Weld.Part0 = torso;
+            Torso_Sheath_Weld.Part1 = sheath;
+            Torso_Sheath_Weld.Enabled = true;
 
-            sheathWeld.Part0 = sheath;
-            sheathWeld.Part1 = katana;
-            sheathWeld.Enabled = true;
-            sheathWeld.Parent = apperancy.Weapon.Welds;
+            Sheath_Katana_Weld.Part0 = sheath;
+            Sheath_Katana_Weld.Part1 = katana;
+            Sheath_Katana_Weld.Enabled = true;
+            Sheath_Katana_Weld.Parent = apperancy.Weapon.Welds;
         };
 
         doUnequipVisual();
 
         this.createSheathBlinkVFX(ownerId, sheath);
-        this.LastActionUpdate(ownerId, character, false);
+        //this.LastActionUpdate(ownerId, character, false);
     }
 
-    public LastActionUpdate(
-        ownerId: string,
-        character: Model,
-        lastAction?: boolean,
-        update?: boolean,
-    ) {
-        let janitor = this.GetJanitor(ownerId);
+    // public LastActionUpdate(
+    //     ownerId: string,
+    //     character: Model,
+    //     lastAction?: boolean,
+    //     update?: boolean,
+    // ) {
+    //     let janitor = this.GetJanitor(ownerId);
 
-        const entity = this.api.entityStorageAPI.AddEntity(ownerId, character)!;
-        entity.miscData.set("LastAction", lastAction ?? true);
+    //     const entity = this.api.entityStorageAPI.AddEntity(ownerId, character)!;
+    //     entity.miscData.set("LastAction", lastAction ?? true);
 
-        let entityLastAction = entity.miscData.get("LastAction")! as boolean;
+    //     let entityLastAction = entity.miscData.get("LastAction")! as boolean;
 
-        janitor.Remove(`LastActionCheck`);
+    //     janitor.Remove(`LastActionCheck`);
 
-        if (update === undefined || update === false) return;
+    //     if (update === undefined || update === false) return;
 
-        if (entityLastAction === true) {
-            janitor.Add(
-                task.delay(2.5, () => {
-                    entity.miscData.set("LastAction", false);
+    //     if (entityLastAction === true) {
+    //         janitor.Add(
+    //             task.delay(2.5, () => {
+    //                 entity.miscData.set("LastAction", false);
 
-                    const playerBus = this.api.eventBusAPI.New(ownerId, "Player");
-                    const packName = entity.miscData.get("LastAction") ? "Unsheath" : "Sheath";
-                    playerBus.Fire(
-                        "ChangeAnimationsPack",
-                        undefined,
-                        true,
-                        character,
-                        `shared.Assets.Animations.Sekiro.Movement.${packName}`,
-                    );
+    //                 const playerBus = this.api.eventBusAPI.New(ownerId, "Player");
+    //                 const packName = entity.miscData.get("LastAction") ? "Unsheath" : "Sheath";
+    //                 playerBus.Fire(
+    //                     "ChangeAnimationsPack",
+    //                     undefined,
+    //                     true,
+    //                     character,
+    //                     `shared.Assets.Animations.Sekiro.Movement.${packName}`,
+    //                 );
 
-                    this.Unequip(ownerId, character);
-                }),
-                true,
-                `LastActionCheck`,
-            );
-        }
-    }
+    //                 this.Unequip(ownerId, character);
+    //             }),
+    //             true,
+    //             `LastActionCheck`,
+    //         );
+    //     }
+    // }
 
     public Destroy_Basic_M1(ownerId: string, character: Model, currentClick: number) {
         this.vfxModules.basic_M1.Destroy_Basic_M1(ownerId, character, currentClick);
@@ -499,10 +581,16 @@ export class Sekiro implements OnStart {
         ownerId: string,
         character: Model,
         currentClick: number,
+        animationToPlay: Animation,
         serverTime: number,
-        ownerPing: number,
     ) {
-        this.vfxModules.basic_M1.Basic_M1(ownerId, character, currentClick, serverTime, ownerPing);
+        this.vfxModules.basic_M1.Basic_M1(
+            ownerId,
+            character,
+            currentClick,
+            animationToPlay,
+            serverTime,
+        );
     }
 
     public Hit(ownerId: string, character: Model, currentClick: number, serverTime: number) {
@@ -519,5 +607,25 @@ export class Sekiro implements OnStart {
 
     public BlockHit(ownerId: string, character: Model, serverTime: number) {
         this.vfxModules.basic_Block.BlockHit(ownerId, character, serverTime);
+    }
+
+    public BlockBreak(ownerId: string, character: Model, serverTime: number, endTime: number) {
+        this.vfxModules.basic_Block.BlockBreak(ownerId, character, serverTime, endTime);
+    }
+
+    public Parry_Cast(ownerId: string, character: Model, serverTime: number) {
+        this.vfxModules.basic_Parry.Parry_Cast(ownerId, character, serverTime);
+    }
+
+    public WasParried(ownerId: string, character: Model, serverTime: number) {
+        this.vfxModules.basic_Parry.WasParried(ownerId, character, serverTime);
+    }
+
+    public Parried(ownerId: string, character: Model, serverTime: number) {
+        this.vfxModules.basic_Parry.Parried(ownerId, character, serverTime);
+    }
+
+    public Dodge(ownerId: string, character: Model, serverTime: number) {
+        this.vfxModules.default.Dodge(ownerId, character, serverTime);
     }
 }

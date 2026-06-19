@@ -21,6 +21,9 @@ export class Server_SetupAbilities {
     constructor(player: Player) {
         task.spawn(() => {
             let playerStringUserId = tostring(player.UserId);
+            let character =
+                (player.Character as Model) ?? (player.CharacterAdded.Wait()[0] as Model);
+            let humanoid = character.WaitForChild("Humanoid") as Humanoid;
 
             const atomReplication = Dependency<ServerAtomReplication>();
 
@@ -30,26 +33,37 @@ export class Server_SetupAbilities {
 
             const playerData = atomReplication.GetPlayersDataAtom().Get(playerStringUserId)!;
 
-            for (const pack of this.currentPacks) {
-                const keys = [] as string[];
+            const RemoveExistingAbilities = () => {
+                for (const pack of this.currentPacks) {
+                    const keys = [] as string[];
 
-                for (const [key] of pairs(pack)) {
-                    keys.push(key);
-                }
+                    for (const [key] of pairs(pack)) {
+                        keys.push(key);
+                    }
 
-                for (const key of keys) {
-                    const ability = pack[key];
+                    for (const key of keys) {
+                        const ability = pack[key];
 
-                    if (ability?.ability) {
-                        this.api.abilityAPI.Remove(playerStringUserId, ability.ability.config.name);
+                        if (ability?.ability) {
+                            this.api.abilityAPI.Remove(
+                                playerStringUserId,
+                                ability.ability.config.name,
+                            );
 
-                        ability.ability = undefined;
-                        delete pack[key];
+                            ability.ability = undefined;
+                            delete pack[key];
+                        }
                     }
                 }
-            }
 
-            this.currentPacks.clear();
+                this.currentPacks.clear();
+            };
+
+            RemoveExistingAbilities();
+
+            humanoid.Died.Once(() => {
+                RemoveExistingAbilities();
+            });
 
             this.currentPacks.push(
                 CreatePack(playerData.Equipment.Character.Name, playerStringUserId),

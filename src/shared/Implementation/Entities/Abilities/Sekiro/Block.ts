@@ -34,14 +34,13 @@ export function Block(ownerId: string) {
             states: ["Idle"],
             lastUsed: 0,
             types: [{ name: "Defense", level: 1 }],
-            additionalBlacklist: ["Dash", "WeaponClick", "Parry"],
+            additionalBlacklist: [`Dash`, `WeaponClick`, `BlockBreak`],
             cooldown: 0.25,
             duration: math.huge,
             minDuration: 0,
         },
         {
             onStartCheck() {
-                task.wait(PingUitl.GetNetworkPing(ownerId));
                 if (
                     replicatedStatusEffectsAPI.CheckReplicatedStatuses(
                         ownerId,
@@ -49,7 +48,6 @@ export function Block(ownerId: string) {
                         ability.config.ignoreList ?? [],
                     )
                 ) {
-                    print("FIRST RETURN");
                     return false;
                 }
 
@@ -60,17 +58,12 @@ export function Block(ownerId: string) {
                         ability.config.ignoreList ?? [],
                     )
                 ) {
-                    print("SECOND RETURN");
                     return false;
                 }
-
-                print("Passed");
 
                 return true;
             },
             onEndCheck() {
-                task.wait(PingUitl.GetNetworkPing(ownerId));
-
                 if (
                     replicatedStatusEffectsAPI.CheckReplicatedStatuses(
                         ownerId,
@@ -101,7 +94,6 @@ export function Block(ownerId: string) {
 
                 ClientSignals.Ability.fire("Sekiro_Block", "Hold", "Start");
 
-                print("Shared_Block_Start");
                 sekiroVFXs.Block(ownerId, character, Workspace.GetServerTimeNow());
                 replicatedStatusEffectsAPI.CreateStatus(
                     ownerId,
@@ -113,6 +105,7 @@ export function Block(ownerId: string) {
                     RunService.Heartbeat.Connect(() => {
                         if (!ability.config.states.includes("Holding")) {
                             ability.Execute("End", true);
+                            return;
                         }
                     }),
                     "Disconnect",
@@ -151,7 +144,6 @@ export function Block(ownerId: string) {
 
                 replicatedStatusEffectsAPI.RemoveStatus(ownerId, "Block");
                 sekiroVFXs.BlockStop(ownerId, character, Workspace.GetServerTimeNow());
-                print("Shared_Block_End");
             },
             onInterrupt() {
                 ability._janitor.Remove("BlockCheck");
@@ -165,13 +157,10 @@ export function Block(ownerId: string) {
 
                     ability._janitor.Remove("BlockCheck");
 
-                    ClientSignals.Ability.fire("Sekiro_Block", "Hold", "Reject");
+                    //ClientSignals.Ability.fire("Sekiro_Block", "Hold", "Reject");
 
                     replicatedStatusEffectsAPI.RemoveStatus(ownerId, "Block");
                     sekiroVFXs.BlockStop(ownerId, character, Workspace.GetServerTimeNow());
-                    print("Shared_Block_End");
-                    print("Shared_Block_Reject");
-                    print(replicatedStatusEffectsAPI.GetStatuses(ownerId));
                 }
             },
         },

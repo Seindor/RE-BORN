@@ -1,3 +1,4 @@
+import { Workspace } from "@rbxts/services";
 import { ReplicatedStatus, StatusId } from "shared/Types/GlobalStatusEffectsTypes";
 import { BlacklistedStatus } from "../Types/StatusTypes";
 import { Janitor } from "@rbxts/janitor";
@@ -53,13 +54,23 @@ export class ReplicatedStatusEffectsService {
         if (existing) {
             this._janitor.Remove(`ClientStatus_${actorId}_${data.id}`);
 
+            if (existing.duration !== math.huge) {
+                this._janitor.Add(
+                    task.delay(existing.duration, () => {
+                        this.RemoveStatus(actorId, data.id!);
+                    }),
+                    true,
+                    `ClientStatus_${actorId}_${data.id!}`,
+                );
+            }
+
             return existing;
         }
 
         const status: ReplicatedStatus = {
             id: data.id!,
             priority: data?.priority ?? 1,
-            spawned: data?.spawned ?? os.clock(),
+            spawned: data?.spawned ?? Workspace.GetServerTimeNow(),
             duration: data?.duration ?? math.huge,
             stacks: data?.stacks ?? 1,
             stackBehavior: data?.stackBehavior,

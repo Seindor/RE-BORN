@@ -8,7 +8,10 @@ import type {
 import { ServerRegistry } from "server/DI/Generated/ServerRegistry";
 import { CompositionRootServer } from "server/DI/CompositionRootServer";
 
-import type { TraceClipAPI } from "server/Domain/TraceClip/API/TraceClipAPI";
+import { SharedRegistry } from "shared/DI/Generated/SharedRegistry";
+import { CompositionRootShared } from "shared/DI/CompositionRootShared";
+
+import type { TraceClipAPI } from "shared/Domain/TraceClip/API/TraceClipAPI";
 import type { GameEffectsAPI } from "server/Domain/GameEffectsQueue/API/GameEffectsApi";
 
 class TraceGameEffectsLogger implements IGameEffectsLogger {
@@ -26,10 +29,13 @@ class TraceGameEffectsLogger implements IGameEffectsLogger {
 @Service()
 export class GameEffectsTraceHandler implements OnStart {
     onStart(): void {
-        const scope = CompositionRootServer.createScope();
+        const serverScope = CompositionRootServer.createScope();
+        const sharedScope = CompositionRootShared.createScope();
 
-        const traceApi = scope.resolve(ServerRegistry.Singletons.API.TraceClipAPI) as TraceClipAPI;
-        const gameEffectsApi = scope.resolve(
+        const traceApi = sharedScope.resolve(
+            SharedRegistry.Singletons.API.TraceClipAPI,
+        ) as TraceClipAPI;
+        const gameEffectsApi = serverScope.resolve(
             ServerRegistry.Singletons.API.GameEffectsAPI,
         ) as GameEffectsAPI;
 

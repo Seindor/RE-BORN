@@ -37,10 +37,12 @@ export class StatusEffectsAPI {
 
     public Subscribe(
         actorId: string,
-        statuses: {
-            status: StatusId;
-            event: "Added" | "Removed";
-        }[],
+        statuses:
+            | {
+                  status: StatusId;
+                  event: "Added" | "Removed";
+              }[]
+            | "All",
         callback: (event: "Added" | "Removed", status: StatusAggregate) => void,
         name: string,
     ) {
@@ -53,6 +55,10 @@ export class StatusEffectsAPI {
 
     public GetStatuses(actorId: string): StatusAggregate[] | undefined {
         return this.service.GetStatuses(actorId);
+    }
+
+    public GetStatus(actorId: string, statusName: StatusId): StatusAggregate | undefined {
+        return this.service.GetStatus(actorId, statusName);
     }
 
     public RemoveStatus(actorId: string, statusName: StatusId) {

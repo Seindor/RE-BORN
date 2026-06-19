@@ -1,15 +1,15 @@
 import { SharedRegistry } from "shared/DI/Generated/SharedRegistry";
 import { CompositionRootShared } from "shared/DI/CompositionRootShared";
-import { SoundsUtil } from "shared/Utilities/SoundsUtil";
+
 import { SolverAggregate } from "shared/Domain/NumbersSolver/Aggregates/SolverAggregate";
 
 const SharedScope = CompositionRootShared.createScope();
 
 const SolverAPI = SharedScope.resolve(SharedRegistry.Singletons.API.SolverAPI);
 
-export function WalkspeedSolver(solverId: string): SolverAggregate {
-    let walkspeedSolver = SolverAPI.CreateSolver({
-        solverName: `Walkspeed_Solver_${solverId}`,
+export function CreateWalkSpeedSolver(solverId: string): SolverAggregate {
+    let walkSpeedSolver = SolverAPI.CreateSolver({
+        solverName: `WalkSpeed_Solver_${solverId}`,
         phases: [
             {
                 name: "Flat",
@@ -26,6 +26,13 @@ export function WalkspeedSolver(solverId: string): SolverAggregate {
             },
 
             {
+                name: "Multiplier2",
+                algorithm: "Expression_Mult",
+                subAlgorithm: "Multiply",
+                priority: 3,
+            },
+
+            {
                 name: "Override",
                 algorithm: "Expression_Add",
                 subAlgorithm: "Multiply",
@@ -33,5 +40,5 @@ export function WalkspeedSolver(solverId: string): SolverAggregate {
             },
         ],
     });
-    return walkspeedSolver;
+    return walkSpeedSolver;
 }

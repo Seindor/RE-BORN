@@ -36,15 +36,13 @@ export function M1(ownerId: string) {
             states: ["Idle"],
             lastUsed: 0,
             types: [{ name: "Combat", level: 1 }],
-            additionalBlacklist: ["Dash", "WeaponClick", "Block"],
+            additionalBlacklist: ["Dash_Cast", "WeaponClick", "Block", `Parry_Cast`],
             cooldown: 0,
             duration: 0,
             minDuration: 0,
         },
         {
             onStartCheck() {
-                task.wait(PingUitl.GetNetworkPing(ownerId));
-
                 if (
                     replicatedStatusEffectsAPI.CheckReplicatedStatuses(
                         ownerId,
@@ -86,15 +84,21 @@ export function M1(ownerId: string) {
                     return;
                 }
 
-                let timingPackName = entity.miscData.get("LastAction") ? "Equipped" : "Unequipped";
+                let timingPackName = (character.GetAttribute(`EquippedWeapon`) as boolean)
+                    ? "Equipped"
+                    : "Unequipped";
                 let timingPack = timings[timingPackName as keyof typeof timings];
                 let timing = timingPack[`M1_${currentClick}` as keyof typeof timings.Equipped];
 
                 ability.config.cooldown = timing.cooldown;
 
-                task.delay(timing.cooldown, () => {
-                    ability.config.cooldown = 0;
-                });
+                ability._janitor.Add(
+                    task.delay(timing.cooldown, () => {
+                        ability.config.cooldown = 0;
+                    }),
+                    true,
+                    "CooldownChange",
+                );
 
                 replicatedStatusEffectsAPI.CreateStatus(
                     ownerId,
@@ -104,18 +108,19 @@ export function M1(ownerId: string) {
 
                 let sekiroVFXs = VFXModules.Sekiro();
 
-                sekiroVFXs.Basic_M1(
-                    ownerId,
-                    character,
-                    currentClick,
-                    Workspace.GetServerTimeNow() - PingUitl.GetRealPing(ownerId),
-                    PingUitl.GetRealPing(ownerId),
-                );
+                // sekiroVFXs.Basic_M1(
+                //     ownerId,
+                //     character,
+                //     currentClick,
+                //     Workspace.GetServerTimeNow() - PingUitl.GetRealPing(ownerId),
+                //     PingUitl.GetRealPing(ownerId),
+                // );
+
                 ClientSignals.Ability.fire(
                     "Sekiro_M1",
                     "Switch",
                     "Start",
-                    (entity.miscData.get("LastAction") as boolean) || false,
+                    Workspace.GetServerTimeNow(),
                 );
             },
             onEnd() {},
@@ -123,8 +128,6 @@ export function M1(ownerId: string) {
                 let sekiroVFXs = VFXModules.Sekiro();
                 let entity = entitiesStorageAPI.GetEntity(ownerId)!;
                 let character = entity.entity as Model;
-
-                print("Shared_M1_Interrupt", ownerId);
 
                 replicatedStatusEffectsAPI.RemoveStatus(ownerId, "WeaponClick");
                 sekiroVFXs.Destroy_Basic_M1(ownerId, character, currentClick);
