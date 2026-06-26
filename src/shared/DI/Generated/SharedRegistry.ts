@@ -15,13 +15,14 @@ import { token as __token12 } from "../Providers/Shared/Singletons/API/JanitorAP
 import { token as __token13 } from "../Providers/Shared/Singletons/API/MotionAPI/MotionAPIToken";
 import { token as __token14 } from "../Providers/Shared/Singletons/API/PassiveAPIProvider/PassiveAPIToken";
 import { token as __token15 } from "../Providers/Shared/Singletons/API/PhaseResolverAPI/PhaseResolverAPIToken";
-import { token as __token16 } from "../Providers/Shared/Singletons/API/ProximityAPIProvider/ProximityAPIToken";
-import { token as __token17 } from "../Providers/Shared/Singletons/API/RenderDistanceAPI copy/RenderDistanceAPIToken";
-import { token as __token18 } from "../Providers/Shared/Singletons/API/ReplicatedStatusEffectsAPIProvider/ReplicatedStatusEffectsAPIToken";
-import { token as __token19 } from "../Providers/Shared/Singletons/API/SolverAPIProvder/SolverAPIToken";
-import { token as __token20 } from "../Providers/Shared/Singletons/API/ToolAPIProvider/ToolAPIToken";
-import { token as __token21 } from "../Providers/Shared/Singletons/API/TraceClipAPIProvider/TraceClipAPIToken";
-import { token as __token22 } from "../Providers/Shared/Singletons/API/UIWrapperAPIProvider/UIWrapperAPIToken";
+import { token as __token16 } from "../Providers/Shared/Singletons/API/PipelineAPI/PipelineAPIToken";
+import { token as __token17 } from "../Providers/Shared/Singletons/API/ProximityAPIProvider/ProximityAPIToken";
+import { token as __token18 } from "../Providers/Shared/Singletons/API/RenderDistanceAPI copy/RenderDistanceAPIToken";
+import { token as __token19 } from "../Providers/Shared/Singletons/API/ReplicatedStatusEffectsAPIProvider/ReplicatedStatusEffectsAPIToken";
+import { token as __token20 } from "../Providers/Shared/Singletons/API/SolverAPIProvder/SolverAPIToken";
+import { token as __token21 } from "../Providers/Shared/Singletons/API/ToolAPIProvider/ToolAPIToken";
+import { token as __token22 } from "../Providers/Shared/Singletons/API/TraceClipAPIProvider/TraceClipAPIToken";
+import { token as __token23 } from "../Providers/Shared/Singletons/API/UIWrapperAPIProvider/UIWrapperAPIToken";
 
 export const SharedRegistry = {
   Singletons: {
@@ -42,13 +43,14 @@ export const SharedRegistry = {
       MotionAPI: __token13,
       PassiveAPI: __token14,
       PhaseResolverAPI: __token15,
-      ProximityAPI: __token16,
-      RenderDistanceAPI: __token17,
-      ReplicatedStatusEffectsAPI: __token18,
-      SolverAPI: __token19,
-      ToolAPI: __token20,
-      TraceClipAPI: __token21,
-      UIWrapperAPI: __token22,
+      PipelineAPI: __token16,
+      ProximityAPI: __token17,
+      RenderDistanceAPI: __token18,
+      ReplicatedStatusEffectsAPI: __token19,
+      SolverAPI: __token20,
+      ToolAPI: __token21,
+      TraceClipAPI: __token22,
+      UIWrapperAPI: __token23,
     },
   },
 } as const;
