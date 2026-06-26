@@ -1,14 +1,11 @@
-import type { PlayerData } from "shared/Types/Gameplay/PlayerData";
-import type { LimitedsData } from "./LimitedsData";
+import type { PlayerData } from "shared/Types/Database/PlayerData";
 
 export interface DataStoreDataMap {
     PlayersData: PlayerData;
-    Limiteds: LimitedsData;
 }
 
 export interface DataTemplateMap {
     PlayerData: PlayerData;
-    LimitedsData: LimitedsData;
 }
 
 export type DataStoreName = keyof DataStoreDataMap;

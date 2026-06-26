@@ -9,7 +9,7 @@ import {
     DataStoreName,
     LoadProfileOptions,
     ProfileKey,
-} from "shared/Types/Gameplay/DataStoreTypes";
+} from "shared/Types/Database/DataStoreTypes";
 
 export class DataStoreAPI {
     private readonly service = new DataStoreService();

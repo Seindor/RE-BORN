@@ -4,7 +4,7 @@ import { server } from "@rbxts/charm-sync";
 import { SharedRegistry } from "shared/DI/Generated/SharedRegistry";
 import { CompositionRootShared } from "shared/DI/CompositionRootShared";
 
-import type { PlayerData } from "shared/Types/Gameplay/PlayerData";
+import type { PlayerData } from "shared/Types/Database/PlayerData";
 import { ServerSignals } from "shared/Implementation/Entities/SerrverSignals";
 import { StatusEffectsState } from "shared/Types/GlobalStatusEffectsTypes";
 

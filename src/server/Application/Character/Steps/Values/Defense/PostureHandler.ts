@@ -14,27 +14,14 @@ let serverScope = CompositionRootServer.createScope();
 
 let entitiesStorageAPI = sharedScope.resolve(SharedRegistry.Singletons.API.EntitiesStorageAPI);
 let statusEffectsAPI = serverScope.resolve(ServerRegistry.Singletons.API.StatusEffectsAPI);
+let janitorAPI = sharedScope.resolve(SharedRegistry.Singletons.API.JanitorAPI);
 
 let postureRegenerateBlacklist = [`CantRegeneratePosture`, `Dead`, `Stun`, `Block`] as IStatusId[];
 
 @Service()
 export class PostureHandler {
-    public janitors = new Map<string, Janitor<any>>();
-
-    public GetJanitor(ownerId: string, character?: Model): Janitor<any> {
-        if (this.janitors.has(ownerId)) return this.janitors.get(ownerId)!;
-        let janitor = new Janitor<any>();
-
-        if (character) {
-            janitor.LinkToInstance(character, true);
-        }
-
-        this.janitors.set(ownerId, janitor);
-        return janitor;
-    }
-
     public Init(ownerId: string) {
-        let janitor = this.GetJanitor(ownerId);
+        let janitor = janitorAPI.Create(ownerId, `PosutreHandler`);
         let entity = entitiesStorageAPI.GetEntity(ownerId);
 
         if (!entity) return;

@@ -1,5 +1,5 @@
-import { DataStoreDefinition } from "shared/Types/Gameplay/DataStoreTypes";
-import { LimitedsData } from "../../../../Types/Gameplay/LimitedsData";
+import { DataStoreDefinition } from "shared/Types/Database/DataStoreTypes";
+import { LimitedsData } from "../../../../Types/Database/LimitedsData";
 
 export const LimitedsTemplate: LimitedsData = {
     items: {},

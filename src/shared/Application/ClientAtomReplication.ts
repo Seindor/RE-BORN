@@ -5,7 +5,7 @@ import { Players } from "@rbxts/services";
 import { SharedRegistry } from "shared/DI/Generated/SharedRegistry";
 import { CompositionRootShared } from "shared/DI/CompositionRootShared";
 
-import type { PlayerData } from "shared/Types/Gameplay/PlayerData";
+import type { PlayerData } from "shared/Types/Database/PlayerData";
 import { ClientSignals } from "shared/Implementation/Entities/ClientSignals";
 import { StatusEffectsState } from "shared/Types/GlobalStatusEffectsTypes";
 

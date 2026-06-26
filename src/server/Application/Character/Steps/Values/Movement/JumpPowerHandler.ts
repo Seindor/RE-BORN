@@ -9,51 +9,38 @@ let sharedScope = CompositionRootShared.createScope();
 
 let entitiesStorageAPI = sharedScope.resolve(SharedRegistry.Singletons.API.EntitiesStorageAPI);
 let solverAPI = sharedScope.resolve(SharedRegistry.Singletons.API.SolverAPI);
+let janitorAPI = sharedScope.resolve(SharedRegistry.Singletons.API.JanitorAPI);
 
 @Service()
-export class WalkSpeedHandler {
-    public janitors = new Map<string, Janitor<any>>();
-
-    public GetJanitor(ownerId: string, character?: Model): Janitor<any> {
-        if (this.janitors.has(ownerId)) return this.janitors.get(ownerId)!;
-        let janitor = new Janitor<any>();
-
-        if (character) {
-            janitor.LinkToInstance(character, true);
-        }
-
-        this.janitors.set(ownerId, janitor);
-        return janitor;
-    }
-
+export class JumpPowerHandler {
     public Init(ownerId: string) {
-        let janitor = this.GetJanitor(ownerId);
-        let walkSpeedSolver = solverAPI.GetSolver(`WalkSpeed_Solver_${ownerId}`);
+        let janitor = janitorAPI.Create(ownerId, `JumpPowerHandler`);
+        let jumpPowerSolver = solverAPI.GetSolver(`JumpPower_Solver_${ownerId}`);
 
         janitor.Add(
             task.spawn(() => {
-                while (walkSpeedSolver === undefined) {
-                    walkSpeedSolver = solverAPI.GetSolver(`WalkSpeed_Solver_${ownerId}`);
+                while (jumpPowerSolver === undefined) {
+                    jumpPowerSolver = solverAPI.GetSolver(`JumpPower_Solver_${ownerId}`);
                     task.wait(0.15);
                 }
 
-                walkSpeedSolver!.Subscribe(
+                jumpPowerSolver!.Subscribe(
                     ["Set", "Add", "Remove"],
-                    `${ownerId}_WalkSpeed_Update`,
+                    `${ownerId}_JumpPower_Update`,
                     (...args: unknown[]) => {
                         let entity = entitiesStorageAPI.GetEntity(ownerId)!;
                         let character = entity.entity as Model;
                         let humanoid = character.WaitForChild("Humanoid") as Humanoid;
 
-                        let newSpeed = walkSpeedSolver!.CalculateValue(12);
+                        let newJumpPower = jumpPowerSolver!.CalculateValue(40);
 
-                        humanoid.WalkSpeed = newSpeed;
-                        character.SetAttribute(`WalkSpeed`, newSpeed);
+                        humanoid.JumpPower = newJumpPower;
+                        character.SetAttribute(`JumpPower`, newJumpPower);
                     },
                 );
             }),
             true,
-            `WalkSpeedHandler`,
+            `JumpPowerHandler`,
         );
     }
 }

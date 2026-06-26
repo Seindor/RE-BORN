@@ -15,7 +15,7 @@ import {
     DataTemplateName,
     LoadProfileOptions,
     ProfileKey,
-} from "../../../../shared/Types/Gameplay/DataStoreTypes";
+} from "../../../../shared/Types/Database/DataStoreTypes";
 
 type AnyProfileAggregate = DataProfileAggregate<unknown>;
 

@@ -1,0 +1,172 @@
+import { IFactionData } from "./Faction";
+import { Gender } from "./Gender";
+import { IHotbarSlot } from "./Hotbar";
+import { IItemStack } from "./Item";
+import { IKeybinds } from "./Keybinds";
+import { IQuestData } from "./Quest";
+import { Race } from "./Race";
+import { ITalentData } from "./Talent";
+
+export interface ISlotData {
+    slotInfo: ISlotInfo;
+    slotVersion: number;
+
+    flags: Record<string, boolean | number | string>;
+    counters: Record<string, number>;
+
+    statistics: IStatistics;
+
+    character: ICharacterData;
+}
+
+export interface ICharacterData {
+    profile: IProfileData;
+
+    stats: IStatsData;
+
+    status: IStatusData;
+
+    world: IWorldData;
+
+    reputation: Record<string, number>;
+
+    faction: IFactionData;
+
+    collections: ICollectionsData;
+
+    flags: Record<string, boolean | number | string>;
+    counters: Record<string, number>;
+
+    progression: IProgressionData;
+
+    equipment: IEquipmentData;
+
+    inventory: IInventoryData;
+
+    talents: ITalentData[];
+
+    quests: IQuestData[];
+}
+
+export interface ISlotInfo {
+    createdAt: number;
+    lastPlayed: number;
+    playTime: number;
+}
+
+export interface IStatistics {
+    wipes: number;
+
+    totalDeaths: number;
+    totalKills: number;
+    totalNpcKills: number;
+
+    highestLevel: number;
+
+    totalPlayTime: number;
+
+    questStatistics: Record<string, IQuestData>;
+}
+
+export interface IProfileData {
+    name: string;
+    clan: string;
+    race: Race;
+    gender: Gender;
+    currencies: ICurrencies;
+}
+
+export interface ICurrencies {
+    yens: number;
+    rcCells: number;
+    ghoulPoints: number;
+}
+
+export interface IStatsData {
+    strength: number;
+    vitality: number;
+    agility: number;
+}
+
+export interface IStatusData {
+    health: number;
+    hunger: number;
+}
+
+export interface IWorldData {
+    lastPosition: Vector3;
+    region?: string;
+    spawnId?: string;
+}
+
+export interface IProgressionData {
+    level: number;
+    experience: number;
+    lives: number;
+}
+
+export interface IEquipmentData {
+    appearance: IAppearanceData;
+
+    hotbar: IHotbarSlot[];
+}
+
+export interface IAppearanceData {
+    hat?: string;
+    face?: string;
+    mouth?: string;
+    body?: string;
+    legs?: string;
+    back?: string;
+}
+
+export interface IInventoryData {
+    items: IItemStack[];
+
+    capacity: number;
+}
+
+export interface ICollectionsData {
+    forms: string[];
+    recipes: string[];
+
+    masks: string[];
+
+    titles: string[];
+
+    achievements: string[];
+
+    emotes: string[];
+}
+
+export interface PlayerData {
+    version: number;
+
+    slots: ISlotData[];
+
+    account: {
+        joinedAt: number;
+
+        redeemedCodes: Record<string, number>;
+
+        receivedGroupReward: true;
+
+        discordVerified: false;
+
+        tester: true;
+    };
+
+    purchases: {
+        gamepasses: string[];
+
+        products: Record<string, number>;
+    };
+
+    settings: {
+        masterVolume: number;
+        musicVolume: number;
+        effectsVolume: number;
+
+        keybinds: IKeybinds;
+    };
+}

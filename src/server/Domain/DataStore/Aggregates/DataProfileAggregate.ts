@@ -1,4 +1,4 @@
-import type { DataTemplateName } from "shared/Types/Gameplay/DataStoreTypes";
+import type { DataTemplateName } from "shared/Types/Database/DataStoreTypes";
 
 type TableKey = string | number;
 type UnknownTable = Record<TableKey, unknown>;

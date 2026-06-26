@@ -8,7 +8,7 @@ import { CompositionRootServer } from "server/DI/CompositionRootServer";
 
 import { ServerAtomReplication } from "server/Application/ServerAtomReplication";
 
-import type { PlayerData } from "shared/Types/Gameplay/PlayerData";
+import type { PlayerData } from "shared/Types/Database/PlayerData";
 import EventBusAggregate from "shared/Domain/EventBus/Aggregates/EventBusAggregate";
 
 const sharedScope = CompositionRootShared.createScope();

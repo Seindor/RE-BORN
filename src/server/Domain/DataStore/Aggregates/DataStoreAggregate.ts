@@ -5,7 +5,7 @@ import {
     DataStoreName,
     LoadProfileOptions,
     ProfileKey,
-} from "shared/Types/Gameplay/DataStoreTypes";
+} from "shared/Types/Database/DataStoreTypes";
 
 export class DataStoreAggregate<TStoreName extends DataStoreName> {
     public readonly name: TStoreName;

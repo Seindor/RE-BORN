@@ -2,7 +2,7 @@ import { Players, Workspace } from "@rbxts/services";
 import { Dependency, OnStart, Service } from "@flamework/core";
 
 import { DataHandler } from "server/Implementation/Handlers/DataHandler";
-import { ServerAtomReplication } from "./ServerAtomReplication";
+// import { ServerAtomReplication } from "./ServerAtomReplication";
 
 import { Server_CharacterHandler } from "server/Implementation/Handlers/Server_CharacterHandler";
 import { StatusEffectsReplication } from "./StatusEffectsReplication";
@@ -61,12 +61,12 @@ export class ServerPlayerApplication implements OnStart {
 
             this.dataHandlers.set(player, dataHandler);
 
-            task.spawn(() => {
-                const atomReplication = Dependency<ServerAtomReplication>();
-                while (!atomReplication.IsPlayerFullyReady(userId)) {
-                    task.wait();
-                }
-            });
+            // task.spawn(() => {
+            //     const atomReplication = Dependency<ServerAtomReplication>();
+            //     while (!atomReplication.IsPlayerFullyReady(userId)) {
+            //         task.wait();
+            //     }
+            // });
         });
 
         Players.PlayerRemoving.Connect((player) => {

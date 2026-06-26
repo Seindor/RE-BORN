@@ -11,20 +11,6 @@ let entitiesStorageAPI = sharedScope.resolve(SharedRegistry.Singletons.API.Entit
 
 @Service()
 export class HealthHandler {
-    public janitors = new Map<string, Janitor<any>>();
-
-    public GetJanitor(ownerId: string, character?: Model): Janitor<any> {
-        if (this.janitors.has(ownerId)) return this.janitors.get(ownerId)!;
-        let janitor = new Janitor<any>();
-
-        if (character) {
-            janitor.LinkToInstance(character, true);
-        }
-
-        this.janitors.set(ownerId, janitor);
-        return janitor;
-    }
-
     public Init(ownerId: string) {
         let entity = entitiesStorageAPI.GetEntity(ownerId);
 

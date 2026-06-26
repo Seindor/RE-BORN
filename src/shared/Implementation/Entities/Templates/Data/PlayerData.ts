@@ -1,5 +1,5 @@
-import { DataStoreDefinition } from "shared/Types/Gameplay/DataStoreTypes";
-import { PlayerData } from "shared/Types/Gameplay/PlayerData";
+import { DataStoreDefinition } from "shared/Types/Database/DataStoreTypes";
+import { PlayerData } from "shared/Types/Database/PlayerData";
 
 export const PlayersDataTemplate: PlayerData = {
     Version: 1,
