@@ -91,6 +91,6 @@ export class PipelineAPI {
     // ── helpers ──────────────────────────────────────────────────────────────
 
     private resolveName(nameOrToken: string | PipelineToken<any>): string {
-        return typeof nameOrToken === "string" ? nameOrToken : nameOrToken.Name;
+        return typeIs(nameOrToken, "string") ? nameOrToken : nameOrToken.Name;
     }
 }

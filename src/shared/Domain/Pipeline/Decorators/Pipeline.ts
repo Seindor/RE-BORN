@@ -38,8 +38,9 @@ export function Pipeline(props: PipelineStepDecoratorProps) {
     return function <T extends new (...args: any[]) => IPipelineStep<PipelineContextData>>(
         ctor: T,
     ): T {
-        const pipelineName =
-            typeof props.Pipeline === "string" ? props.Pipeline : props.Pipeline.Name;
+        const pipelineName = typeIs(props.Pipeline, "string")
+            ? props.Pipeline
+            : props.Pipeline.Name;
 
         // Создаём экземпляр шага.
         // Если шаг использует Flamework DI — передай его через конструктор

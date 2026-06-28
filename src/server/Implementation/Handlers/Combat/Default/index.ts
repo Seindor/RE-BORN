@@ -1,4 +1,3 @@
-import { Default_Block_Effect } from "./Effects/Default_Block";
 import { Default_Dodge_Effect } from "./Effects/Default_Dodge";
 import { Default_M1_Damage_Effect } from "./Effects/Default_M1_Damage";
 import { Default_Parry_Effect } from "./Effects/Default_Parry";
@@ -9,6 +8,6 @@ export const DefaultCombat = (ownerId: string) => {
 
     Default_M1_Damage_Effect(ownerId);
     Default_Parry_Effect(ownerId);
-    Default_Block_Effect(ownerId);
+
     Default_Dodge_Effect(ownerId);
 };

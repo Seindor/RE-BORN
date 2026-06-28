@@ -149,11 +149,11 @@ export interface PlayerData {
 
         redeemedCodes: Record<string, number>;
 
-        receivedGroupReward: true;
+        receivedGroupReward: boolean;
 
-        discordVerified: false;
+        discordVerified: boolean;
 
-        tester: true;
+        tester: boolean;
     };
 
     purchases: {

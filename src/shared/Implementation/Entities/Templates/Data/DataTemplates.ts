@@ -1,7 +1,5 @@
-import { PlayersDataTemplate } from "../Data/PlayerData";
-import { LimitedsTemplate } from "../Data/Limiteds";
+import { PlayerDataTemplate } from "./PlayerData";
 
 export const DataTemplates = {
-    PlayerData: PlayersDataTemplate,
-    LimitedsData: LimitedsTemplate,
+    PlayerData: PlayerDataTemplate,
 } as const;

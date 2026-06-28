@@ -1,33 +1,64 @@
 import { DataStoreDefinition } from "shared/Types/Database/DataStoreTypes";
+
 import { PlayerData } from "shared/Types/Database/PlayerData";
 
-export const PlayersDataTemplate: PlayerData = {
-    Version: 1,
+export const PlayerDataTemplate: PlayerData = {
+    version: 1,
 
-    Currencies: {
-        Souls: 0,
-        Kills: 0,
+    slots: [],
+
+    account: {
+        joinedAt: 0,
+
+        redeemedCodes: {},
+
+        receivedGroupReward: false,
+
+        discordVerified: false,
+
+        tester: false,
     },
 
-    Equipment: {
-        Character: {
-            Name: "Sekiro",
-            Passive_1: "none",
-            Passive_2: "none",
+    purchases: {
+        gamepasses: [],
+
+        products: {},
+    },
+
+    settings: {
+        masterVolume: 1,
+        musicVolume: 1,
+        effectsVolume: 1,
+
+        keybinds: {
+            M1: {
+                inputTypes: ["MouseButton1"],
+            },
+
+            M2: {
+                inputTypes: ["MouseButton2"],
+            },
+
+            Critical: {
+                inputTypes: ["R"],
+            },
+
+            Block: {
+                inputTypes: ["F"],
+            },
+
+            Interact: {
+                inputTypes: ["E"],
+            },
+
+            Dash: {
+                inputTypes: ["Q"],
+            },
+
+            Run: {
+                inputTypes: ["LeftShift"],
+            },
         },
-    },
-
-    Inventory: {
-        Passives: [],
-    },
-
-    Config: {},
-
-    Gamepasses: [],
-
-    Settings: {
-        MusicVolume: 1,
-        EffectsVolume: 1,
     },
 };
 
@@ -35,5 +66,5 @@ export const PlayersDataDefinition: DataStoreDefinition<"PlayersData"> = {
     name: "PlayersData",
     storeName: "PlayersData",
     templateName: "PlayerData",
-    template: PlayersDataTemplate,
+    template: PlayerDataTemplate,
 };

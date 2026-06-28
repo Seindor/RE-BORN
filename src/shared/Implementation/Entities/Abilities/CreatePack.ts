@@ -1,5 +1,4 @@
 import { AbilityAggregate } from "shared/Domain/Ability/Aggregates/AbilityAggregate";
-import { SekiroPack } from "./Sekiro";
 import { DefaultPack } from "./Default";
 
 export type AbilityFactory = (ownerId: string) => AbilityAggregate;
@@ -18,10 +17,7 @@ export type AbilityPackDefinition = {
     abilities: Record<string, AbilityEntry>;
 };
 
-const PackRegistry = new Map<string, AbilityPackDefinition>([
-    [SekiroPack.name, SekiroPack],
-    [DefaultPack.name, DefaultPack],
-]);
+const PackRegistry = new Map<string, AbilityPackDefinition>([[DefaultPack.name, DefaultPack]]);
 
 export type PackResult = Record<
     string,
