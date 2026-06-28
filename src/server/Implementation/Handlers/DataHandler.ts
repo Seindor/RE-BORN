@@ -6,8 +6,6 @@ import { ServerRegistry } from "server/DI/Generated/ServerRegistry";
 import { CompositionRootShared } from "shared/DI/CompositionRootShared";
 import { CompositionRootServer } from "server/DI/CompositionRootServer";
 
-import { ServerAtomReplication } from "server/Application/ServerAtomReplication";
-
 import type { PlayerData } from "shared/Types/Database/PlayerData";
 import EventBusAggregate from "shared/Domain/EventBus/Aggregates/EventBusAggregate";
 
@@ -19,8 +17,6 @@ export class DataHandler {
 
     private readonly dataStoreAPI = serverScope.resolve(ServerRegistry.Singletons.API.DataStoreAPI);
     private readonly eventBusAPI = sharedScope.resolve(SharedRegistry.Singletons.API.EventBusAPI);
-
-    public atomReplication = Dependency<ServerAtomReplication>();
 
     private readonly playerDataBus: EventBusAggregate;
 
@@ -46,10 +42,6 @@ export class DataHandler {
 
         this.profile = profile;
         this.data = profile.GetData() as PlayerData;
-
-        this.GetAtom().SetRoot(this.data);
-
-        this.atomReplication.MarkDataLoaded(this.player);
 
         this.playerDataBus.FireSync("DataLoaded", undefined, true, true);
 
@@ -78,15 +70,6 @@ export class DataHandler {
         }
 
         return this.data;
-    }
-
-    public GetAtom() {
-        return this.atomReplication.GetPlayersDataAtom().For(this.playerStringId);
-    }
-
-    public Release(): void {
-        this.atomReplication.UnregisterPlayer(this.player);
-        this.dataStoreAPI.ReleaseProfile("PlayersData", this.playerStringId);
     }
 
     public AddValue(path: string, amount: number): void {}

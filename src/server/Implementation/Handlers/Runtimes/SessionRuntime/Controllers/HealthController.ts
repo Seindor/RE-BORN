@@ -15,8 +15,8 @@ const serverReplicatedAtomAPI = serverScope.resolve(
 export class HealthController extends ReplicatedController<SessionContext> {
     public readonly Name = "HealthController";
 
-    private hp = 100;
-    private maxHp = 100;
+    private Health = 100;
+    private MaxHealth = 100;
 
     protected OnInit(): void {
         print(`Health Controller Initialized for ${this.runtime.Context.id}`);
@@ -26,11 +26,11 @@ export class HealthController extends ReplicatedController<SessionContext> {
             const data = dataHandler.GetData();
             const slotData = data.slots[1];
 
-            this.hp = slotData?.character.status.health ?? 100;
-            this.maxHp = 100;
+            this.Health = slotData?.character.status.health ?? 100;
+            this.MaxHealth = 100;
         } else {
-            this.hp = this.runtime.GetMeta<number>("initialHp") ?? 100;
-            this.maxHp = this.runtime.GetMeta<number>("initialMaxHp") ?? 100;
+            this.Health = this.runtime.GetMeta<number>("initialHealth") ?? 100;
+            this.MaxHealth = this.runtime.GetMeta<number>("initialMaxHealth") ?? 100;
         }
 
         this.SyncToReplicator();
@@ -38,30 +38,30 @@ export class HealthController extends ReplicatedController<SessionContext> {
 
     protected OnDestroy(): void {}
 
-    public Damage(v: number): void {
-        this.hp = math.max(0, this.hp - v);
+    public Damage(value: number): void {
+        this.Health = math.clamp(value, 0, this.MaxHealth);
         this.SyncToReplicator();
     }
 
-    public Heal(v: number): void {
-        this.hp = math.min(this.maxHp, this.hp + v);
+    public Heal(value: number): void {
+        this.Health = math.clamp(this.Health + value, 0, this.MaxHealth);
         this.SyncToReplicator();
     }
 
-    public GetHp(): number {
-        return this.hp;
+    public GetHealth(): number {
+        return this.Health;
     }
     public IsDead(): boolean {
-        return this.hp <= 0;
+        return this.Health <= 0;
     }
 
     protected Serialize() {
-        return { Hp: this.hp, MaxHp: this.maxHp };
+        return { Health: this.Health, MaxHealth: this.MaxHealth };
     }
 
     private SyncToReplicator(): void {
         serverReplicatedAtomAPI
             .Get<SessionStatsReplicator>("SessionStats")
-            ?.SyncHealth(this.runtime.Context.id, this.hp, this.maxHp);
+            ?.SyncHealth(this.runtime.Context.id, this.Health, this.MaxHealth);
     }
 }

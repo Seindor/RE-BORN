@@ -21,7 +21,6 @@ export class ReplicatedAtomAggregate<TState extends object> implements IReplicat
     private readonly accessor = new AtomPathAccessorComponent();
     private readonly clone = new DeepCloneComponent();
 
-    // Visibility убрана — только конструктор с именем и дефолтным стейтом
     constructor(name: ReplicatorName, defaultState: TState) {
         this.Name = name;
         this.stateAtom = atom<TState>(this.clone.Deep(defaultState));

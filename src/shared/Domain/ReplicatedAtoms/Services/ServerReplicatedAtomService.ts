@@ -16,6 +16,7 @@ type RecipientMap = Map<string, Set<Player>>;
 
 export class ServerReplicatedAtomService {
     private readonly registry = ReplicatedAtomRegistry.getInstance();
+    public Inited = false as boolean;
     private onSend?: ServerSendCallback;
 
     private readonly syncers = new Map<string, ReturnType<typeof server>>();
@@ -88,25 +89,41 @@ export class ServerReplicatedAtomService {
     // ── init / hydrate ───────────────────────────────────────────────────────
 
     public Init(): void {
+        if (this.Inited) return;
+
+        this.Inited = true;
+
         for (const [name, replicator] of this.registry.GetAll()) {
             const syncer = server({
                 atoms: { [name]: replicator.GetAtom() },
             });
 
+            print(`INIT SYNCER`, name, replicator, syncer);
+
             this.syncers.set(name, syncer);
 
-            syncer.connect((player, data) => {
+            syncer.connect((player, payload) => {
                 if (!this.onSend) return;
 
-                // Собираем какие акторы этот player имеет право видеть в этом канале
                 const channelMap = this.recipients.get(name);
                 if (!channelMap) return;
 
-                // Фильтруем data — оставляем только ключи акторов
-                // для которых player является получателем
-                const filtered = this.filterForPlayer(data, player, channelMap);
+                // payload is shaped { type: "init" | "patch", data: { [atomName]: atomState } }
+                const wirePayload = payload as {
+                    type: "init" | "patch";
+                    data: Record<string, unknown>;
+                };
+                const atomState = wirePayload.data[name];
+
+                const filtered = this.filterForPlayer(atomState, player, channelMap);
                 if (filtered !== undefined) {
-                    this.onSend(player, { channel: name, data: filtered });
+                    this.onSend(player, {
+                        channel: name,
+                        data: {
+                            type: wirePayload.type,
+                            data: { [name]: filtered },
+                        },
+                    });
                 }
             });
         }
@@ -155,6 +172,7 @@ export class ServerReplicatedAtomService {
 
             // Проверяем: является ли player получателем данных этого актора
             const players = channelMap.get(actorId);
+
             if (players?.has(player)) {
                 result[key] = value;
                 hasData = true;

@@ -6,16 +6,22 @@ import { StepRunner } from "./StepRunner";
 
 let NPCs = Workspace.WaitForChild("Map")!.WaitForChild("NPCs");
 
-import { SharedRegistry } from "shared/DI/Generated/SharedRegistry";
-import { CompositionRootShared } from "shared/DI/CompositionRootShared";
 import {
     GameContext,
     GamePipelineToken,
 } from "server/Implementation/Handlers/Pipelines/Game/GamePipeline";
 
+import { SharedRegistry } from "shared/DI/Generated/SharedRegistry";
+import { CompositionRootShared } from "shared/DI/CompositionRootShared";
+import { ServerRegistry } from "server/DI/Generated/ServerRegistry";
+import { CompositionRootServer } from "server/DI/CompositionRootServer";
+import { ServerSignals } from "shared/Implementation/Entities/SerrverSignals";
+
 const sharedScope = CompositionRootShared.createScope();
+const serverScope = CompositionRootServer.createScope();
 
 const pipelineAPI = sharedScope.resolve(SharedRegistry.Singletons.API.PipelineAPI);
+const serverAtomAPI = serverScope.resolve(ServerRegistry.Singletons.API.ServerAtomAPI);
 
 @Service()
 export class ServerGameApplication implements OnStart {

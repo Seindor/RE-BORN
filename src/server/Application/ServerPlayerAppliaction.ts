@@ -1,5 +1,3 @@
-import { PlayerDataReplicator } from "server/Implementation/Handlers/Replicators/PlayerDataReplicator";
-
 import { Players } from "@rbxts/services";
 import { Service, OnStart } from "@flamework/core";
 
@@ -34,16 +32,6 @@ const serverReplicatedAtomAPI = serverScope.resolve(
 @Service()
 export class ServerPlayerApplication implements OnStart {
     public onStart(): void {
-        serverReplicatedAtomAPI
-            .SetSendCallback((player, payload) => {
-                ServerSignals.AtomSync.fire(player, payload);
-            })
-            .Init();
-
-        ServerSignals.RequestHydrate.connect((player) => {
-            serverReplicatedAtomAPI.Hydrate(player);
-        });
-
         Players.PlayerAdded.Connect((player) => {
             pipelineAPI.Run<PlayerContext>(PlayerPipelineToken, {
                 id: tostring(player.UserId),
@@ -54,7 +42,6 @@ export class ServerPlayerApplication implements OnStart {
         Players.PlayerRemoving.Connect((player) => {
             const id = tostring(player.UserId);
             runtimeAPI.Remove(id, "Session");
-            serverReplicatedAtomAPI.Get<PlayerDataReplicator>("PlayerData")?.ClearPlayerData(id);
         });
     }
 }

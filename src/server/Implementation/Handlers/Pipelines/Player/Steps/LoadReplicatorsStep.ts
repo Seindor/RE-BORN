@@ -13,8 +13,8 @@ import { CompositionRootServer } from "server/DI/CompositionRootServer";
 import { SharedRegistry } from "shared/DI/Generated/SharedRegistry";
 import { ServerRegistry } from "server/DI/Generated/ServerRegistry";
 import { PipelineStep } from "shared/Domain/Pipeline/Aggregates/PipelineStep";
-import { SessionControllers } from "server/Implementation/Handlers/Runtimes/SessionRuntime/SessionControllers";
-import { HealthControllerToken } from "server/Implementation/Handlers/Runtimes/SessionRuntime/SessionRuntimeTokens";
+import { SessionStatsReplicator } from "server/Implementation/Handlers/Replicators/SessionStatsReplicator";
+import { ServerSignals } from "shared/Implementation/Entities/SerrverSignals";
 
 const sharedScope = CompositionRootShared.createScope();
 const serverScope = CompositionRootServer.createScope();
@@ -23,24 +23,35 @@ const runtimeAPI = sharedScope.resolve(
     SharedRegistry.Singletons.API.RuntimeAPI,
 ) as RuntimeAPI<SessionContext>;
 
+const janitorAPI = sharedScope.resolve(SharedRegistry.Singletons.API.JanitorAPI);
+
 const serverReplicatedAtomAPI = serverScope.resolve(
     ServerRegistry.Singletons.API.ServerAtomAPI,
 ) as ServerReplicatedAtomAPI;
 
 @Pipeline({ Pipeline: PlayerPipelineToken })
-export class LoadDataStep extends PipelineStep<PlayerContext> {
-    public readonly Id = "LoadDataStep";
+export class LoadReplicatorsStep extends PipelineStep<PlayerContext> {
+    public readonly Id = "LoadReplicatorsStep";
+    public readonly After = ["LoadDataStep"];
 
     public Execute(ctx: PipelineContext<PlayerContext>): void {
         const { id, player } = ctx.Data;
+        const janitor = janitorAPI.Create(id, `LoadreplicatorsStep`);
 
-        const handler = new DataHandler(player);
-        if (!handler.Load()) error(`[LoadDataStep] Failed for ${id}`);
+        let sessionStatsReplicator =
+            serverReplicatedAtomAPI.Get<SessionStatsReplicator>("SessionStats");
+        sessionStatsReplicator?.InitActor(id);
+        serverReplicatedAtomAPI.AddRecipient("SessionStats", id, player);
 
-        // Сессия создаётся только после успешной загрузки данных
-        const sessionRuntime = runtimeAPI.Create<SessionControllers>({ id }, "Session");
-        sessionRuntime.SetMeta("DataHandler", handler);
+        janitor.Add(
+            ServerSignals.RequestHydrate.connect((player) => {
+                print("HYDRATE REQUEST RECEIVED FROM", player);
+                serverReplicatedAtomAPI.Hydrate(player);
+            }),
+            "Disconnect",
+            `RequestHydrate`,
+        );
 
-        ctx.Log(`[LoadDataStep] Done for ${id}`);
+        ctx.Log(`[LoadReplicatorsStep] Done for ${id}`);
     }
 }
